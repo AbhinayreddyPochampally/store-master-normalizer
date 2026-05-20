@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Store Master Reconciliation — v3</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --border: #e2e6ec;
+    --border-strong: #c8cfd9;
+    --text: #1a2230;
+    --text-2: #5b667a;
+    --accent: #2563eb;
+    --accent-tint: #dbeafe;
+    --success: #137333;
+    --success-tint: #e6f4ea;
+    --danger: #c5221f;
+    --danger-tint: #fdecea;
+    --warn: #b45309;
+    --warn-tint: #fef3c7;
+    --shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 12px rgba(15,23,42,.04);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  .shell { max-width: 1240px; margin: 0 auto; padding: 24px; }
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 16px; margin-bottom: 24px; border-bottom: 1px solid var(--border);
+  }
+  .page-header h1 { margin: 0 0 4px 0; font-size: 22px; }
+  .page-header .sub { color: var(--text-2); font-size: 13px; }
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    background: var(--accent-tint); color: var(--accent);
+    font-size: 11px; font-weight: 600;
+  }
+  .layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: flex-start; }
+  @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 18px;
+  }
+  .card h2 { margin: 0 0 12px 0; font-size: 15px; letter-spacing: .01em; }
+  .field { margin-bottom: 14px; }
+  label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 4px; font-weight: 600; }
+  input[type=text], select {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--border-strong);
+    border-radius: 6px; background: var(--surface); font-size: 13px;
+  }
+  input[type=text]:focus, select:focus {
+    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint);
+  }
+  .brand-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .brand-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border: 1px solid var(--border-strong); border-radius: 999px;
+    background: var(--surface); cursor: pointer; font-size: 12px; user-select: none;
+  }
+  .brand-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .brand-chip input { display: none; }
+
+  /* Upload slot */
+  .slot {
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+    margin-bottom: 12px; background: var(--surface);
+  }
+  .slot.hidden { display: none; }
+  .slot.has-file { border-color: var(--success); background: var(--success-tint); }
+  .slot.error { border-color: var(--danger); background: var(--danger-tint); }
+  .slot-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .slot-name { font-weight: 600; flex: 1; }
+  .slot-avatar {
+    width: 30px; height: 30px; border-radius: 6px; display: grid; place-items: center;
+    background: var(--accent-tint); color: var(--accent); font-weight: 700; font-size: 11px;
+  }
+  .slot-row { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+  .slot-row > * { flex: 1; min-width: 140px; }
+  .slot-row .file-pick { flex: 2; }
+  .file-meta { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+  .badge {
+    display: inline-block; padding: 1px 7px; border-radius: 4px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    margin-left: 6px; vertical-align: middle;
+  }
+  .badge.last-used { background: #ede9fe; color: #6d28d9; }
+  .badge.preferred { background: #dbeafe; color: #2563eb; }
+  .badge.largest   { background: #fef3c7; color: #b45309; }
+  .badge.first     { background: #e5e7eb; color: #4b5563; }
+  .badge.csv       { background: #d1fae5; color: #047857; }
+  .badge.error     { background: var(--danger-tint); color: var(--danger); }
+  .slot-error { color: var(--danger); font-size: 12px; margin-top: 6px; }
+  .static-sheet {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+    background: #f9fafb; font-size: 13px; color: var(--text-2); font-style: italic;
+  }
+
+  /* Sidebar */
+  .status-row { display: flex; justify-content: space-between; padding: 6px 0;
+    border-bottom: 1px dashed var(--border); font-size: 13px; }
+  .status-row:last-child { border-bottom: 0; }
+  .status-row .v { font-weight: 600; }
+  .ready-pill {
+    display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px;
+    font-weight: 600;
+  }
+  .ready-pill.ready { background: var(--success-tint); color: var(--success); }
+  .ready-pill.not-ready { background: var(--warn-tint); color: var(--warn); }
+
+  .run-row { display: flex; align-items: center; gap: 14px; }
+  button.primary {
+    background: var(--accent); color: #fff; border: 0; padding: 11px 22px;
+    border-radius: 7px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  button.primary:disabled { background: #93a3b8; cursor: not-allowed; }
+  button.primary:hover:not(:disabled) { background: #1d4ed8; }
+  .run-hint { font-size: 12px; color: var(--text-2); }
+
+  /* Results */
+  .download-row { display: flex; gap: 10px; align-items: center; padding: 10px 0; }
+  .download-row a {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border: 1px solid var(--accent); border-radius: 6px;
+    background: var(--accent-tint); color: var(--accent); font-size: 13px;
+    text-decoration: none; font-weight: 600;
+  }
+  .download-row a:hover { background: var(--accent); color: #fff; }
+  table.brand-table {
+    width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px;
+  }
+  table.brand-table th, table.brand-table td {
+    padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left;
+  }
+  table.brand-table th { color: var(--text-2); font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .04em; }
+  .agg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .agg .stat { padding: 10px; background: #f8fafc; border-radius: 6px; }
+  .agg .stat .n { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .agg .stat .l { font-size: 11px; color: var(--text-2); text-transform: uppercase; }
+  .warnings { background: #fff7ed; border: 1px solid #fdba74; padding: 10px 14px; border-radius: 6px; margin-top: 12px; font-size: 12px; }
+  .warnings h4 { margin: 0 0 6px 0; color: var(--warn); }
+  .warnings ul { margin: 0; padding-left: 20px; }
+  .footer { color: var(--text-2); font-size: 11px; text-align: center; margin-top: 30px; }
+  .progress-wrap { display: none; align-items: center; gap: 8px; }
+  .progress-wrap.visible { display: flex; }
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid var(--accent-tint);
+    border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<main class="shell">
+
+  <header class="page-header">
+    <div>
+      <h1>Store Master Reconciliation <span class="pill">v3 prototype</span></h1>
+      <div class="sub">Single-file browser tool. Files stay on this machine.</div>
+    </div>
+    <div class="sub">Engine v3 · 19 May 2026</div>
+  </header>
+
+  <div class="layout">
+    <div>
+      <!-- SETUP CARD -->
+      <section class="card">
+        <h2>Run setup</h2>
+        <div class="field">
+          <label for="month">Month label <span style="font-weight:normal;color:var(--text-2)">(optional)</span></label>
+          <input type="text" id="month" placeholder="e.g. May 2026" style="max-width:240px" />
+        </div>
+        <div class="field">
+          <label>Brands in scope</label>
+          <div class="brand-chips" id="brand-chips">
+            <!-- populated by JS from BRANDS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- UPLOAD CARD -->
+      <section class="card">
+        <h2>Upload files</h2>
+        <div id="brand-slots">
+          <!-- populated by JS -->
+        </div>
+        <div class="slot" id="slot-backend" data-slot="backend">
+          <div class="slot-head">
+            <span class="slot-avatar" style="background:#fef3c7;color:#b45309">BM</span>
+            <span class="slot-name">Backend Master</span>
+          </div>
+          <div class="slot-row">
+            <div class="file-pick">
+              <label for="file-backend">Workbook</label>
+              <input type="file" id="file-backend" accept=".xlsx,.xlsm,.xls,.csv" />
+              <div class="file-meta" id="meta-backend">No file selected.</div>
+            </div>
+            <div>
+              <label for="sheet-backend">Sheet</label>
+              <div id="sheet-wrap-backend">
+                <select id="sheet-backend" disabled><option>—</option></select>
+              </div>
+              <div class="file-meta" id="sheet-meta-backend"></div>
+            </div>
+          </div>
+          <div class="slot-error" id="err-backend" hidden></div>
+        </div>
+      </section>
+
+      <!-- RUN ROW -->
+      <div class="run-row">
+        <button class="primary" id="run" disabled>Reconcile</button>
+        <span class="run-hint" id="run-hint">Pick brands, upload files, choose sheets to enable.</span>
+        <span class="progress-wrap" id="progress"><span class="spinner"></span><span id="progress-text">Working…</span></span>
+      </div>
+
+      <!-- RESULTS -->
+      <section id="results" style="display:none" class="card" aria-live="polite">
+        <h2>Results</h2>
+        <div id="results-body"></div>
+      </section>
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside>
+      <section class="card">
+        <h2>Status <span class="ready-pill not-ready" id="ready-pill" style="float:right">Not ready</span></h2>
+        <div class="status-row"><span>Month</span><span class="v" id="s-month">—</span></div>
+        <div class="status-row"><span>Brands selected</span><span class="v" id="s-brands">0</span></div>
+        <div class="status-row"><span>Files uploaded</span><span class="v" id="s-files">0 / 0</span></div>
+        <div class="status-row"><span>Sheets resolved</span><span class="v" id="s-sheets">0 / 0</span></div>
+        <div class="status-row"><span>Backend master</span><span class="v" id="s-backend">missing</span></div>
+      </section>
+      <section class="card">
+        <h2>How it works</h2>
+        <p style="font-size:12px;color:var(--text-2);line-height:1.6;margin:0">
+          v3 reads each workbook's sheet names on upload and auto-selects via four
+          rules — <em>last-used → preferred → largest → first</em>. You can override
+          any pick. Brand exports are folded into the master in the order shown.
+          Output: one cumulative <code>Updated_Master_&lt;Month&gt;.xlsx</code> plus a
+          per-brand <code>Change_Report</code>. Nothing leaves the browser.
+        </p>
+      </section>
+    </aside>
+  </div>
+
+  <p class="footer">smr/index.html · single self-contained prototype · SheetJS via CDN</p>
+</main>
+
+<!-- SheetJS — workbook parsing + writing.  CDN-loaded but no data leaves
+     the browser; the library executes locally. -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+
+<script>
+"use strict";
+
+/* ============================================================
+ * Master schema (v3, 44 columns).  Column 1 ID, column 2 Title.
+ * ============================================================ */
+const MASTER_FIELDS = [
+  "ID", "Title",
+  "Store Id", "Store Name", "Retek Code", "Legacy Code",
+  "Organization", "MainOrganization", "SubOrganization",
+  "Facility Name", "NewFacilityName", "NewSubBrand",
+  "brand", "Sub-brand", "Facility Type", "Brand2", "Business",
+  "Region", "Store Type", "Store Main type", "Store Subtype",
+  "Store Zone", "Store City", "State", "Address", "Pincode",
+  "Location", "Located", "Square feet", "Carpet",
+  "Store Opening Date", "Showroom Manager Name", "Showroom Manager No",
+  "Store Email Id", "Area Manager Name", "ARM Contact No", "ARM E mail",
+  "Regional Manager Name", "RM Contact No", "Regional Manager E-mail Id",
+  "Isactive", "Dailychecklist access", "Old Sapcode", "Remarks",
+];
+// Title is engine-managed (mirror of Store Id) on every cascade outcome.
+// ID and Old Sapcode are never overwritten on refresh.
+// 44 columns total — verify in console.
+
+/* ============================================================
+ * Approved email domains (Section 6.2)
+ * ============================================================ */
+const APPROVED_EMAIL_DOMAINS = new Set([
+  "abfrl.adityabirla.com",
+  "ablbl.adityabirla.com",
+  "sabyasachi.com",
+  "shantanunikhil.com",
+  "houseofmasaba.com",
+]);
+
+/* ============================================================
+ * Helpers
+ * ============================================================ */
+// Convert a column letter ("A", "B", ..., "AA", "AB", ...) to 0-based index.
+function colToIdx(letter) {
+  let n = 0;
+  for (const ch of letter.toUpperCase()) {
+    if (ch < "A" || ch > "Z") return -1;
+    n = n * 26 + (ch.charCodeAt(0) - 64);
+  }
+  return n - 1;
+}
+
+// v4 rule (d): the four zone codes are all upper-case.
+const ZONE = { SOUTH: "SOUT", NORTH: "NRTH", WEST: "WEST", EAST: "EAST" };
+function zoneFromRegion(region) {
+  if (region == null) return null;
+  const key = String(region).trim().toUpperCase();
+  if (!key) return null;
+  if (ZONE[key]) return ZONE[key];
+  // Fallback: first alpha run, first 4 letters, always upper-case.
+  const m = key.match(/[A-Z]+/);
+  const token = m ? m[0] : key;
+  return ZONE[token] || token.slice(0, 4);
+}
+
+function toTitleCase(s) {
+  if (s == null) return null;
+  return String(s).toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function lowerTrim(s) {
+  if (s == null) return null;
+  return String(s).trim().toLowerCase();
+}
+
+function toIntOrNull(v) {
+  if (v == null || v === "") return null;
+  // Parse as float first so "411005.0" -> 411005 (not 4110050 after
+  // stripping the dot).  Then floor to drop any fractional part.
+  const f = parseFloat(String(v).replace(/[^\d.\-]/g, ""));
+  if (!Number.isFinite(f)) return null;
+  return Math.trunc(f);
+}
+
+// SheetJS returns dates as JS Date objects when cellDates: true is set; otherwise
+// as Excel serials.  Normalise both to YYYY-MM-DD strings.
+function toIsoDate(v) {
+  if (v == null || v === "") return null;
+  if (v instanceof Date && !isNaN(v)) {
+    return v.toISOString().slice(0, 10);
+  }
+  if (typeof v === "number" && Number.isFinite(v)) {
+    // Excel serial -> JS Date (Excel epoch = 1899-12-30)
+    const ms = (v - 25569) * 86400 * 1000;
+    const d = new Date(ms);
+    if (!isNaN(d)) return d.toISOString().slice(0, 10);
+  }
+  const s = String(v).trim();
+  // Already YYYY-MM-DD
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return iso[0];
+  // DD/MM/YYYY or DD-MM-YYYY
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (m) {
+    let [, d, mo, y] = m;
+    if (y.length === 2) y = (Number(y) >= 70 ? "19" : "20") + y;
+    return `${y.padStart(4,"0")}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}`;
+  }
+  return s;
+}
+
+function cleanPhone(v) {
+  if (v == null || v === "") return null;
+  // Preserve "|" separator (multiple numbers).  Just trim each part.
+  return String(v).split("|").map(s => s.trim()).filter(Boolean).join(" | ");
+}
+
+// Pincode parsed out of a TASVA address — "last 6 digits".
+function pincodeFromAddress(addr) {
+  if (!addr) return null;
+  const m = String(addr).match(/(\d{6})(?!\d)/g);
+  if (!m) return null;
+  return parseInt(m[m.length - 1], 10);
+}
+
+// Apply a transform name to a value.
+function applyTransform(value, transform) {
+  if (value == null || value === "") return null;
+  switch ((transform || "").toLowerCase()) {
+    case "upper": return String(value).toUpperCase().trim();
+    case "lower": return String(value).toLowerCase().trim();
+    case "title": case "titlecase": return toTitleCase(String(value).trim());
+    case "trim":  return String(value).trim();
+    case "int":   return toIntOrNull(value);
+    case "isodate": return toIsoDate(value);
+    case "phone": case "phoneclean": return cleanPhone(value);
+    case "zoneprefix": return zoneFromRegion(value);
+    case "yes_no_upper": return String(value).trim().toUpperCase();
+    case "": return typeof value === "string" ? value.trim() : value;
+    default: return value;
+  }
+}
+
+/* ============================================================
+ * BRANDS configuration
+ * Every brand has:
+ *   label           — display string
+ *   scope_column    — master column used to partition rows (brand | Organization)
+ *   scope_value     — value that flags a row as belonging to this brand
+ *   header_row      — 1-indexed row where the data sheet's headers live
+ *   preferred_sheets— ordered candidates for auto-select rule 2
+ *   mapping         — {target_field: rule}
+ * A rule is one of:
+ *   {t: "COL", c: "A", x: "upper"}
+ *   {t: "CONST", v: "PFRL"}
+ *   {t: "EMPTY"}
+ *   {t: "PRESERVE"}             — read from master; never overwrite
+ *   {t: "MIRROR", from: "Store Id"}
+ *   {t: "DERIVED", op: "pincodeFromAddress", c: "Y"}
+ *   {t: "FALLBACK", primary: "L", fallback: "L"}   — same-column fallback (Carpet=Sqft)
+ * ============================================================ */
+const BRANDS = {
+  "Pantaloons": {
+    label: "Pantaloons", scope_column: "brand", scope_value: "Pantaloons",
+    header_row: 1, preferred_sheets: ["Sheet1"],
+    mapping: {
+      "ID":             {t: "PRESERVE"},
+      "Title":          {t: "MIRROR", from: "Store Id"},
+      "Store Id":       {t: "COL", c: "C"},
+      "Store Name":     {t: "COL", c: "D"},
+      "Retek Code":     {t: "COL", c: "C"},
+      "Legacy Code":    {t: "COL", c: "C"},
+      "Organization":   {t: "CONST", v: "PFRL"},
+      "MainOrganization":{t: "CONST", v: "ABFRL"},
+      "SubOrganization":{t: "CONST", v: "PFRL"},
+      "Facility Name":  {t: "CONST", v: "Pantaloons"},
+      "NewFacilityName":{t: "CONST", v: "Pantaloons"},
+      "NewSubBrand":    {t: "EMPTY"},
+      "brand":          {t: "CONST", v: "Pantaloons"},
+      "Sub-brand":      {t: "CONST", v: "Pantaloons"},
+      "Facility Type":  {t: "CONST", v: "Retail"},
+      "Brand2":         {t: "CONST", v: "Pantaloons"},
+      "Business":       {t: "CONST", v: "Pantaloons"},
+      "Region":         {t: "COL", c: "B", x: "upper"},
+      "Store Type":     {t: "COL", c: "K"},
+      "Store Main type":{t: "COL", c: "K"},
+      "Store Subtype":  {t: "COL", c: "K"},
+      "Store Zone":     {t: "COL", c: "B", x: "zoneprefix"},
+      "Store City":     {t: "COL", c: "F"},
+      "State":          {t: "COL", c: "I", x: "title"},
+      "Address":        {t: "COL", c: "O"},
+      "Pincode":        {t: "COL", c: "P", x: "int"},
+      "Location":       {t: "COL", c: "D"},          // = Store Name per D-3
+      "Located":        {t: "COL", c: "J"},
+      "Square feet":    {t: "COL", c: "L", x: "int"},
+      "Carpet":         {t: "COL", c: "L", x: "int"},
+      "Store Opening Date": {t: "COL", c: "M", x: "isodate"},
+      "Showroom Manager Name": {t: "COL", c: "Q"},
+      "Showroom Manager No":   {t: "COL", c: "R", x: "phone"},
+      "Store Email Id": {t: "COL", c: "S", x: "lower"},
+      "Area Manager Name": {t: "COL", c: "T"},
+      "ARM Contact No": {t: "COL", c: "U", x: "phone"},
+      "ARM E mail":     {t: "COL", c: "V", x: "lower"},
+      "Regional Manager Name": {t: "COL", c: "W"},
+      "RM Contact No":  {t: "COL", c: "X", x: "phone"},
+      "Regional Manager E-mail Id": {t: "COL", c: "Y", x: "lower"},
+      "Isactive":       {t: "CONST", v: "YES"},
+      "Dailychecklist access": {t: "CONST", v: "YES"},
+      "Old Sapcode":    {t: "PRESERVE"},
+      "Remarks":        {t: "PRESERVE"},   // engine writes via cascade
+    },
+  },
+
+  "Tasva": {
+    label: "TASVA", scope_column: "brand", scope_value: "Tasva",
+    header_row: 2, preferred_sheets: ["Contact Master"],
+    mapping: {
+      "ID":             {t: "PRESERVE"},
+      "Title":          {t: "MIRROR", from: "Store Id"},
+      "Store Id":       {t: "COL", c: "A"},
+      "Store Name":     {t: "COL", c: "B"},
+      "Retek Code":     {t: "COL", c: "A"},
+      "Legacy Code":    {t: "COL", c: "A"},
+      "Organization":   {t: "CONST", v: "Ethnic Business"},
+      "MainOrganization":{t: "CONST", v: "ABFRL"},
+      "SubOrganization":{t: "CONST", v: "Ethnic"},
+      "Facility Name":  {t: "CONST", v: "Tasva"},
+      "NewFacilityName":{t: "CONST", v: "Tasva"},
+      "NewSubBrand":    {t: "EMPTY"},
+      "brand":          {t: "CONST", v: "Tasva"},
+      "Sub-brand":      {t: "EMPTY"},
+      "Facility Type":  {t: "CONST", v: "Retail"},
+      "Brand2":         {t: "CONST", v: "Tasva"},
+      "Business":       {t: "CONST", v: "Ethnic Business"},
+      "Region":         {t: "COL", c: "E", x: "upper"},
+      "Store Type":     {t: "COL", c: "D"},
+      "Store Main type":{t: "COL", c: "D"},
+      "Store Subtype":  {t: "COL", c: "D"},
+      "Store Zone":     {t: "COL", c: "E", x: "zoneprefix"},
+      "Store City":     {t: "COL", c: "G"},
+      "State":          {t: "COL", c: "F", x: "title"},
+      "Address":        {t: "COL", c: "Y"},
+      "Pincode":        {t: "DERIVED", op: "pincodeFromAddress", c: "Y"},
+      "Location":       {t: "COL", c: "B"},
+      "Located":        {t: "COL", c: "C"},
+      "Square feet":    {t: "EMPTY"},
+      "Carpet":         {t: "EMPTY"},
+      "Store Opening Date": {t: "COL", c: "W", x: "isodate"},
+      "Showroom Manager Name": {t: "COL", c: "X"},
+      "Showroom Manager No":   {t: "EMPTY"},
+      "Store Email Id": {t: "COL", c: "V", x: "lower"},
+      "Area Manager Name": {t: "COL", c: "K"},        // col 10 per D-1
+      "ARM Contact No": {t: "COL", c: "L", x: "phone"},// col 11
+      "ARM E mail":     {t: "COL", c: "M", x: "lower"},// col 12
+      "Regional Manager Name": {t: "COL", c: "H"},     // col 7
+      "RM Contact No":  {t: "COL", c: "J", x: "phone"},// col 9
+      "Regional Manager E-mail Id": {t: "COL", c: "I", x: "lower"}, // col 8
+      "Isactive":       {t: "CONST", v: "YES"},
+      "Dailychecklist access": {t: "CONST", v: "YES"},
+      "Old Sapcode":    {t: "PRESERVE"},
+      "Remarks":        {t: "PRESERVE"},
+    },
+  },
+
+  "TCNS": {
+    label: "TCNS", scope_column: "Organization", scope_value: "TCNS",
+    header_row: 1, preferred_sheets: ["Mar", "Apr", "May", "Jun", "Jul", "Aug",
+                                      "Sep", "Oct", "Nov", "Dec", "Jan", "Feb"],
+    mapping: {
+      "ID":             {t: "PRESERVE"},
+      "Title":          {t: "MIRROR", from: "Store Id"},
+      "Store Id":       {t: "COL", c: "B"},
+      "Store Name":     {t: "COL", c: "F"},
+      "Retek Code":     {t: "COL", c: "B"},
+      "Legacy Code":    {t: "COL", c: "B"},
+      "Organization":   {t: "CONST", v: "TCNS"},
+      "MainOrganization":{t: "CONST", v: "ABFRL"},
+      "SubOrganization":{t: "CONST", v: "Ethnic"},
+      "Facility Name":  {t: "CONST", v: "TCNS"},
+      "NewFacilityName":{t: "CONST", v: "TCNS"},
+      "NewSubBrand":    {t: "EMPTY"},
+      "brand":          {t: "CONST", v: "TCNS"},
+      "Sub-brand":      {t: "EMPTY"},
+      "Facility Type":  {t: "CONST", v: "Retail"},
+      "Brand2":         {t: "CONST", v: "TCNS"},
+      "Business":       {t: "CONST", v: "Ethnic Business"},
+      "Region":         {t: "COL", c: "D", x: "upper"},
+      "Store Type":     {t: "COL", c: "L"},
+      "Store Main type":{t: "COL", c: "L"},
+      "Store Subtype":  {t: "COL", c: "L"},
+      "Store Zone":     {t: "COL", c: "D", x: "zoneprefix"},
+      "Store City":     {t: "COL", c: "G"},
+      "State":          {t: "COL", c: "H", x: "title"},
+      "Address":        {t: "COL", c: "AA"},
+      "Pincode":        {t: "COL", c: "AB", x: "int"},
+      "Location":       {t: "COL", c: "F"},
+      "Located":        {t: "COL", c: "I"},
+      "Square feet":    {t: "COL", c: "AD", x: "int"},
+      "Carpet":         {t: "COL", c: "AD", x: "int"},
+      "Store Opening Date": {t: "COL", c: "AC", x: "isodate"},
+      "Showroom Manager Name": {t: "COL", c: "W"},
+      "Showroom Manager No":   {t: "COL", c: "X", x: "phone"},
+      "Store Email Id": {t: "COL", c: "V", x: "lower"},
+      "Area Manager Name": {t: "COL", c: "P"},
+      "ARM Contact No": {t: "COL", c: "R", x: "phone"},
+      "ARM E mail":     {t: "COL", c: "Q", x: "lower"},
+      "Regional Manager Name": {t: "COL", c: "Y"},
+      "RM Contact No":  {t: "COL", c: "Z", x: "phone"},
+      "Regional Manager E-mail Id": {t: "EMPTY"},
+      "Isactive":       {t: "CONST", v: "YES"},
+      "Dailychecklist access": {t: "CONST", v: "YES"},
+      "Old Sapcode":    {t: "PRESERVE", seed_on_new: {c: "C"}},  // col C = Final AX
+      "Remarks":        {t: "PRESERVE"},
+    },
+  },
+
+  "PF": {
+    label: "Planet Fashion", scope_column: "brand", scope_value: "PF",
+    header_row: 2, preferred_sheets: ["PF Active Stores"],
+    mapping: {
+      "ID":             {t: "PRESERVE"},
+      "Title":          {t: "MIRROR", from: "Store Id"},
+      "Store Id":       {t: "COL", c: "C"},   // Active SAP — column varies by export; per current brands.json
+      "Store Name":     {t: "COL", c: "C"},
+      "Retek Code":     {t: "COL", c: "D"},   // SHRM 2
+      "Legacy Code":    {t: "COL", c: "E"},   // ASP Code
+      "Organization":   {t: "CONST", v: "MFL Lifestyle"},
+      "MainOrganization":{t: "CONST", v: "ABLBL"},
+      "SubOrganization":{t: "CONST", v: "Lifestyle Brands"},
+      "Facility Name":  {t: "CONST", v: "Planet Fashion"},
+      "NewFacilityName":{t: "CONST", v: "Planet Fashion"},
+      "NewSubBrand":    {t: "EMPTY"},
+      "brand":          {t: "CONST", v: "PF"},
+      "Sub-brand":      {t: "EMPTY"},
+      "Facility Type":  {t: "CONST", v: "Retail"},
+      "Brand2":         {t: "CONST", v: "Planet Fashion"},
+      "Business":       {t: "CONST", v: "Lifestyle"},
+      "Region":         {t: "COL", c: "F", x: "upper"},
+      "Store Type":     {t: "COL", c: "G"},
+      "Store Main type":{t: "COL", c: "G"},
+      "Store Subtype":  {t: "EMPTY"},
+      "Store Zone":     {t: "COL", c: "F", x: "zoneprefix"},
+      "Store City":     {t: "COL", c: "H"},
+      "State":          {t: "COL", c: "I", x: "title"},
+      "Address":        {t: "COL", c: "J"},
+      "Pincode":        {t: "COL", c: "K", x: "int"},
+      "Location":       {t: "COL", c: "C"},
+      "Located":        {t: "COL", c: "L"},
+      "Square feet":    {t: "COL", c: "M", x: "int"},
+      "Carpet":         {t: "COL", c: "M", x: "int"},
+      "Store Opening Date": {t: "COL", c: "N", x: "isodate"},
+      "Showroom Manager Name": {t: "COL", c: "O"},
+      "Showroom Manager No":   {t: "COL", c: "P", x: "phone"},
+      "Store Email Id": {t: "COL", c: "Q", x: "lower"},
+      "Area Manager Name": {t: "COL", c: "R"},
+      "ARM Contact No": {t: "COL", c: "S", x: "phone"},
+      "ARM E mail":     {t: "COL", c: "T", x: "lower"},
+      "Regional Manager Name": {t: "COL", c: "U"},
+      "RM Contact No":  {t: "COL", c: "V", x: "phone"},
+      "Regional Manager E-mail Id": {t: "COL", c: "W", x: "lower"},
+      "Isactive":       {t: "CONST", v: "YES"},
+      "Dailychecklist access": {t: "CONST", v: "YES"},
+      "Old Sapcode":    {t: "PRESERVE"},
+      "Remarks":        {t: "PRESERVE"},
+    },
+  },
+
+  "VHIW": {
+    label: "VH Innerwear", scope_column: "brand", scope_value: "VH IW",
+    header_row: 1, preferred_sheets: ["Sheet1", "Store Master", "Active Stores"],
+    // Mapping per Section 8.5 (template from Anil's reference). Source columns
+    // marked best-effort — operator should verify against the live VH IW
+    // workbook before first production run.
+    mapping: {
+      "ID":             {t: "PRESERVE"},
+      "Title":          {t: "MIRROR", from: "Store Id"},
+      "Store Id":       {t: "COL", c: "C"},
+      "Store Name":     {t: "COL", c: "D"},
+      "Retek Code":     {t: "COL", c: "C"},
+      "Legacy Code":    {t: "COL", c: "C"},
+      "Organization":   {t: "CONST", v: "Innerwear Business"},
+      "MainOrganization":{t: "CONST", v: "ABLBL"},
+      "SubOrganization":{t: "CONST", v: "INNER Ware"},
+      "Facility Name":  {t: "CONST", v: "VH Innerwear"},
+      "NewFacilityName":{t: "CONST", v: "VH Innerwear"},
+      "NewSubBrand":    {t: "EMPTY"},
+      "brand":          {t: "CONST", v: "VH IW"},
+      "Sub-brand":      {t: "EMPTY"},
+      "Facility Type":  {t: "CONST", v: "Retail"},
+      "Brand2":         {t: "CONST", v: "Vh Innerwear"},
+      "Business":       {t: "CONST", v: "Innerwear"},
+      "Region":         {t: "COL", c: "B", x: "upper"},
+      "Store Type":     {t: "COL", c: "K"},
+      "Store Main type":{t: "COL", c: "K"},
+      "Store Subtype":  {t: "EMPTY"},
+      "Store Zone":     {t: "COL", c: "B", x: "zoneprefix"},
+      "Store City":     {t: "COL", c: "F"},
+      "State":          {t: "COL", c: "I", x: "title"},
+      "Address":        {t: "COL", c: "O"},
+      "Pincode":        {t: "COL", c: "P", x: "int"},
+      "Location":       {t: "COL", c: "D"},
+      "Located":        {t: "COL", c: "J"},
+      "Square feet":    {t: "COL", c: "R", x: "int"},   // Section 8.5 highlight
+      "Carpet":         {t: "COL", c: "R", x: "int"},   // Same col R
+      "Store Opening Date": {t: "COL", c: "M", x: "isodate"},
+      "Showroom Manager Name": {t: "COL", c: "Q"},
+      "Showroom Manager No":   {t: "COL", c: "S", x: "phone"},
+      "Store Email Id": {t: "COL", c: "T", x: "lower"},
+      "Area Manager Name": {t: "COL", c: "U"},
+      "ARM Contact No": {t: "COL", c: "V", x: "phone"},
+      "ARM E mail":     {t: "COL", c: "W", x: "lower"},
+      "Regional Manager Name": {t: "COL", c: "X"},
+      "RM Contact No":  {t: "COL", c: "Y", x: "phone"},
+      "Regional Manager E-mail Id": {t: "COL", c: "Z", x: "lower"},
+      "Isactive":       {t: "CONST", v: "YES"},
+      "Dailychecklist access": {t: "CONST", v: "YES"},
+      "Old Sapcode":    {t: "PRESERVE"},
+      "Remarks":        {t: "PRESERVE"},
+    },
+  },
+};
+
+const BACKEND_PREFERRED_SHEETS = ["Backend Updated Data", "Master", "Sheet1"];
+
+/* ============================================================
+ * Source row reader: turn a SheetJS array-of-arrays into
+ * { col_letter: value } dicts, skipping the header row(s).
+ * ============================================================ */
+function readSourceRows(workbook, sheetName, headerRow) {
+  const ws = workbook.Sheets[sheetName];
+  if (!ws) return [];
+  // header:1 => array of arrays; cellDates:true preserves Date instances.
+  // SheetJS's `range` accepts an absolute origin; we slice by hand below.
+  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: false, dateNF: "yyyy-mm-dd" });
+  const dataRows = aoa.slice(headerRow);  // headerRow is 1-indexed
+  // Convert each row [v0,v1,...] -> { A: v0, B: v1, ..., AA: v26, ... }
+  const out = [];
+  for (const row of dataRows) {
+    if (!row || row.every(c => c == null || (typeof c === "string" && !c.trim()))) continue;
+    const obj = {};
+    for (let i = 0; i < row.length; i++) {
+      obj[idxToCol(i)] = row[i];
+    }
+    out.push(obj);
+  }
+  return out;
+}
+
+function idxToCol(idx) {
+  let s = "", n = idx + 1;
+  while (n > 0) {
+    const r = (n - 1) % 26;
+    s = String.fromCharCode(65 + r) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+
+/* ============================================================
+ * Read a value from a source row using the mapping rule.
+ * Mapped-row dict is keyed by master field name.
+ * ============================================================ */
+function evalRule(rule, sourceRow, masterRow) {
+  if (!rule) return null;
+  switch (rule.t) {
+    case "COL":
+      return applyTransform(sourceRow[rule.c], rule.x);
+    case "CONST":
+      return rule.v;
+    case "EMPTY":
+      return null;
+    case "PRESERVE":
+      return masterRow ? masterRow[rule._target] : null;
+    case "MIRROR":
+      return null;  // applied post-cascade once Store Id is final
+    case "DERIVED":
+      if (rule.op === "pincodeFromAddress") return pincodeFromAddress(sourceRow[rule.c]);
+      return null;
+    default:
+      return null;
+  }
+}
+
+function mapSourceRowToMaster(brandCfg, sourceRow) {
+  const out = {};
+  for (const field of MASTER_FIELDS) {
+    const rule = brandCfg.mapping[field];
+    if (!rule) { out[field] = null; continue; }
+    if (rule.t === "MIRROR" || rule.t === "PRESERVE") {
+      out[field] = null;   // resolved later
+      continue;
+    }
+    out[field] = evalRule(rule, sourceRow, null);
+  }
+  // v4 rule (d): Region and Store Zone are the SAME 4-char caps code.
+  let regionSrc = out["Region"];
+  if (regionSrc == null || regionSrc === "") regionSrc = out["Store Zone"];
+  const zoneCode = zoneFromRegion(regionSrc);
+  if (zoneCode != null) {
+    out["Region"] = zoneCode;
+    out["Store Zone"] = zoneCode;
+  }
+  // v4 rule (b): Store Main type / Subtype default to Store Type when
+  // the brand sheet does not provide them.
+  const stype = out["Store Type"];
+  if (stype != null && stype !== "") {
+    if (out["Store Main type"] == null || out["Store Main type"] === "") out["Store Main type"] = stype;
+    if (out["Store Subtype"] == null || out["Store Subtype"] === "") out["Store Subtype"] = stype;
+  }
+  // Title mirrors Store Id at write time.
+  out["Title"] = out["Store Id"];
+  return out;
+}
+
+/* ============================================================
+ * Cascade — Section 5
+ * Returns one of: refresh / migrated / reactivated / new / orphan
+ * Mutates masterRows on refresh/migrated/reactivated/new.
+ * ============================================================ */
+function findMatchInScope(masterRows, brandCfg, storeId) {
+  const sid = String(storeId == null ? "" : storeId).trim();
+  if (!sid) return null;
+  for (const r of masterRows) {
+    if (String(r[brandCfg.scope_column] || "").trim() !== brandCfg.scope_value) continue;
+    if (String(r["Isactive"] || "YES").trim().toUpperCase() === "NO") continue;
+    for (const f of ["Store Id", "Retek Code", "Legacy Code"]) {
+      if (String(r[f] == null ? "" : r[f]).trim() === sid) return r;
+    }
+  }
+  return null;
+}
+
+function findMigratedInScope(masterRows, brandCfg, storeId) {
+  const sid = String(storeId == null ? "" : storeId).trim();
+  if (!sid) return null;
+  for (const r of masterRows) {
+    if (String(r[brandCfg.scope_column] || "").trim() !== brandCfg.scope_value) continue;
+    const oldRaw = r["Old Sapcode"];
+    if (oldRaw == null || oldRaw === "") continue;
+    const candidates = String(oldRaw).split(",").map(s => s.trim()).filter(Boolean);
+    if (candidates.includes(sid)) return r;
+  }
+  return null;
+}
+
+function findInactiveInScope(masterRows, brandCfg, storeId) {
+  const sid = String(storeId == null ? "" : storeId).trim();
+  if (!sid) return null;
+  for (const r of masterRows) {
+    if (String(r[brandCfg.scope_column] || "").trim() !== brandCfg.scope_value) continue;
+    if (String(r["Isactive"] || "").trim().toUpperCase() !== "NO") continue;
+    for (const f of ["Store Id", "Retek Code", "Legacy Code"]) {
+      if (String(r[f] == null ? "" : r[f]).trim() === sid) return r;
+    }
+  }
+  return null;
+}
+
+function findOrphanCrossBrand(masterRows, brandCfg, storeId) {
+  const sid = String(storeId == null ? "" : storeId).trim();
+  if (!sid) return null;
+  for (const r of masterRows) {
+    if (String(r[brandCfg.scope_column] || "").trim() === brandCfg.scope_value) continue;
+    for (const f of ["Store Id", "Retek Code", "Legacy Code"]) {
+      if (String(r[f] == null ? "" : r[f]).trim() === sid) return r;
+    }
+  }
+  return null;
+}
+
+function applyMappedToRow(brandCfg, mapped, target, isNew) {
+  const changes = [];
+  for (const field of MASTER_FIELDS) {
+    const rule = brandCfg.mapping[field];
+    if (!rule) continue;
+    if (field === "ID") continue;   // never overwritten
+    if (field === "Old Sapcode" && !isNew) {
+      // v4 rule (e): Old Sapcode is an accumulating, comma-separated list.
+      // Append any source-provided code(s); never replace existing tokens.
+      const v = mapped[field];
+      if (v == null || v === "") continue;
+      const cur = String(target[field] == null ? "" : target[field])
+        .split(",").map(s => s.trim()).filter(Boolean);
+      String(v).split(",").map(s => s.trim()).filter(Boolean)
+        .forEach(t => { if (!cur.includes(t)) cur.push(t); });
+      const merged = cur.join(", ");
+      if (target[field] !== merged) changes.push({field, before: target[field], after: merged});
+      target[field] = merged;
+      continue;
+    }
+    if (field === "Remarks") continue;   // engine writes via cascade
+    if (rule.t === "PRESERVE") {
+      if (isNew && rule.seed_on_new) {
+        const v = applyTransform(rule.seed_on_new.value, rule.seed_on_new.x) ||
+                  (rule.seed_on_new.c ? mapped["__src_" + rule.seed_on_new.c] : null);
+        if (v != null) {
+          if (target[field] !== v) changes.push({field, before: target[field], after: v});
+          target[field] = v;
+        }
+      }
+      continue;
+    }
+    if (rule.t === "MIRROR") continue;   // handled by Title mirror below
+    const v = mapped[field];
+    if (v == null && rule.t !== "EMPTY" && !isNew) continue;  // refresh: don't blank non-empty cells unless EMPTY
+    if (target[field] !== v) {
+      changes.push({field, before: target[field], after: v});
+    }
+    target[field] = v;
+  }
+  // v4 rule (c): Square feet <-> Carpet interchangeable on the final row.
+  {
+    const sf = target["Square feet"], cp = target["Carpet"];
+    const empty = v => v == null || v === "";
+    if (empty(sf) && !empty(cp)) target["Square feet"] = cp;
+    else if (empty(cp) && !empty(sf)) target["Carpet"] = sf;
+  }
+  // Title invariant.
+  if (target["Title"] !== target["Store Id"]) {
+    changes.push({field: "Title", before: target["Title"], after: target["Store Id"]});
+    target["Title"] = target["Store Id"];
+  }
+  return changes;
+}
+
+function fmtMonDate(monthLabel) {
+  const d = new Date();
+  // Use the month label if it parses, else today.
+  const tryLabel = monthLabel && monthLabel.trim();
+  // Best-effort: "Mon DD, YYYY"
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function fmtMonthYYYY(monthLabel) {
+  if (monthLabel && monthLabel.trim()) return monthLabel.trim().replace(/\s+/g, "-");
+  const d = new Date();
+  return d.toLocaleString("en-US", { month: "short" }) + "-" + d.getFullYear();
+}
+
+function reconcileBrand(brandKey, brandCfg, sourceRows, masterRows, monthLabel) {
+  const changes = [];
+  const counts = { NEW: 0, REFRESH: 0, MIGRATED: 0, REACTIVATED: 0, ORPHAN: 0 };
+  const sourceStoreIds = new Set();
+
+  for (const srcRow of sourceRows) {
+    const mapped = mapSourceRowToMaster(brandCfg, srcRow);
+    // Stash raw source columns for seed_on_new lookups.
+    Object.keys(srcRow).forEach(c => { mapped["__src_" + c] = srcRow[c]; });
+    const sid = mapped["Store Id"];
+    if (sid == null || String(sid).trim() === "") continue;
+    sourceStoreIds.add(String(sid).trim());
+
+    // Step 1 — Refresh
+    let target = findMatchInScope(masterRows, brandCfg, sid);
+    if (target) {
+      const fchanges = applyMappedToRow(brandCfg, mapped, target, false);
+      target["Isactive"] = "YES";
+      target["Dailychecklist access"] = "YES";
+      // Existing remark preserved on refresh.
+      counts.REFRESH++;
+      changes.push({ storeId: sid, action: "Refresh", fields: fchanges, remark: target["Remarks"] || "" });
+      continue;
+    }
+    // Step 2 — Migrated
+    target = findMigratedInScope(masterRows, brandCfg, sid);
+    if (target) {
+      const oldCode = target["Store Id"];
+      const fchanges = applyMappedToRow(brandCfg, mapped, target, false);
+      // v4 rule (e): preserve the chain — append the previous Store Id to
+      // the Old Sapcode list (add, never replace), so future runs match.
+      {
+        const cur = String(target["Old Sapcode"] == null ? "" : target["Old Sapcode"])
+          .split(",").map(s => s.trim()).filter(Boolean);
+        const oc = oldCode == null ? "" : String(oldCode).trim();
+        if (oc && !cur.includes(oc)) cur.push(oc);
+        target["Old Sapcode"] = cur.join(", ");
+      }
+      target["Isactive"] = "YES";
+      target["Dailychecklist access"] = "YES";
+      target["Remarks"] = `Migrated from old SAP code ${oldCode} on ${fmtMonDate(monthLabel)}`;
+      counts.MIGRATED++;
+      changes.push({ storeId: sid, action: "Migrated", fields: fchanges, remark: target["Remarks"] });
+      continue;
+    }
+    // Step 3 — Reactivate
+    target = findInactiveInScope(masterRows, brandCfg, sid);
+    if (target) {
+      const fchanges = applyMappedToRow(brandCfg, mapped, target, false);
+      target["Isactive"] = "YES";
+      target["Dailychecklist access"] = "YES";
+      target["Remarks"] = `Reactivated on ${fmtMonDate(monthLabel)}`;
+      counts.REACTIVATED++;
+      changes.push({ storeId: sid, action: "Reactivated", fields: fchanges, remark: target["Remarks"] });
+      continue;
+    }
+    // Step 5 — Orphan (cross-brand collision)
+    const orphan = findOrphanCrossBrand(masterRows, brandCfg, sid);
+    if (orphan) {
+      counts.ORPHAN++;
+      changes.push({ storeId: sid, action: "Orphan", fields: [],
+        remark: `Found under different brand (${orphan[brandCfg.scope_column]}) — source row skipped.` });
+      continue;
+    }
+    // Step 4 — New
+    const fresh = {};
+    for (const f of MASTER_FIELDS) fresh[f] = null;
+    applyMappedToRow(brandCfg, mapped, fresh, true);
+    fresh["ID"] = "";   // blank, populated by SharePoint round-trip
+    fresh["Isactive"] = "YES";
+    fresh["Dailychecklist access"] = "YES";
+    fresh["Remarks"] = `Store newly created on ${fmtMonDate(monthLabel)}`;
+    fresh["Title"] = fresh["Store Id"];
+    masterRows.push(fresh);
+    counts.NEW++;
+    changes.push({ storeId: sid, action: "New", fields: [], remark: fresh["Remarks"] });
+  }
+
+  // Section 6 inactivation pass — only on this brand's rows.
+  let inactivated = 0;
+  for (const r of masterRows) {
+    if (String(r[brandCfg.scope_column] || "").trim() !== brandCfg.scope_value) continue;
+    if (String(r["Isactive"] || "").trim().toUpperCase() === "NO") continue;
+    const sid = String(r["Store Id"] == null ? "" : r["Store Id"]).trim();
+
+    // 6.1 — missing from source
+    if (!sourceStoreIds.has(sid)) {
+      r["Isactive"] = "NO";
+      r["Dailychecklist access"] = "NO";
+      r["Remarks"] = `Store ID not present in ${brandCfg.label} sheet for ${fmtMonthYYYY(monthLabel)}. Marked as Inactive.`;
+      inactivated++;
+      changes.push({ storeId: sid, action: "Inactive (missing)", fields: [], remark: r["Remarks"] });
+      continue;
+    }
+    // 6.2 — bad email domain
+    const email = String(r["Store Email Id"] || "").trim().toLowerCase();
+    if (email && email.includes("@")) {
+      const domain = email.split("@")[1];
+      if (domain && !APPROVED_EMAIL_DOMAINS.has(domain)) {
+        r["Isactive"] = "NO";
+        r["Dailychecklist access"] = "NO";
+        r["Remarks"] = `Store email domain not in the approved list. Marked as Inactive.`;
+        inactivated++;
+        changes.push({ storeId: sid, action: "Inactive (bad email)", fields: [], remark: r["Remarks"] });
+      }
+    }
+  }
+  counts.INACTIVATED = inactivated;
+
+  return { counts, changes };
+}
+
+/* ============================================================
+ * Workbook writers via SheetJS
+ * ============================================================ */
+function writeUpdatedMaster(masterRows) {
+  const aoa = [MASTER_FIELDS.slice()];
+  for (const r of masterRows) aoa.push(MASTER_FIELDS.map(f => r[f]));
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Master");
+  return XLSX.write(wb, { bookType: "xlsx", type: "array" });
+}
+
+function writeChangeReport(brandLabel, result) {
+  const wb = XLSX.utils.book_new();
+
+  // Summary
+  const sumAoa = [
+    ["Metric", "Count"],
+    ["NEW", result.counts.NEW || 0],
+    ["REFRESH", result.counts.REFRESH || 0],
+    ["MIGRATED", result.counts.MIGRATED || 0],
+    ["REACTIVATED", result.counts.REACTIVATED || 0],
+    ["ORPHAN", result.counts.ORPHAN || 0],
+    ["INACTIVATED", result.counts.INACTIVATED || 0],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumAoa), "Summary");
+
+  // Changes
+  const chAoa = [["Store Id", "Classification", "Field", "Before", "After", "Remark"]];
+  for (const c of result.changes) {
+    if (!c.fields || !c.fields.length) {
+      chAoa.push([c.storeId, c.action, "", "", "", c.remark || ""]);
+    } else {
+      for (const f of c.fields) {
+        chAoa.push([c.storeId, c.action, f.field,
+                    f.before == null ? "" : f.before,
+                    f.after  == null ? "" : f.after,
+                    c.remark || ""]);
+      }
+    }
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(chAoa), "Changes");
+  return XLSX.write(wb, { bookType: "xlsx", type: "array" });
+}
+
+function downloadBlob(arrayBuf, name) {
+  const blob = new Blob([arrayBuf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name; a.textContent = name;
+  return a;
+}
+
+/* ============================================================
+ *  UI WIRING
+ * ============================================================ */
+const SLOTS = Object.keys(BRANDS).map(k => ({ key: k, kind: "brand", cfg: BRANDS[k] }));
+const STATE = {};  // slot key (lowercased) -> { file, workbook, sheets, sheet, rowCounts, badge }
+const LS_KEY = (slot) => "smr.sheet." + slot;
+
+function buildUI() {
+  // Brand chips
+  const chips = document.getElementById("brand-chips");
+  for (const s of SLOTS) {
+    const lbl = document.createElement("label");
+    lbl.className = "brand-chip active";
+    lbl.dataset.key = s.key;
+    lbl.innerHTML = `<input type="checkbox" checked /> ${s.cfg.label}`;
+    chips.appendChild(lbl);
+    lbl.addEventListener("click", (e) => {
+      e.preventDefault();
+      const cb = lbl.querySelector("input");
+      cb.checked = !cb.checked;
+      lbl.classList.toggle("active", cb.checked);
+      document.querySelector(`.slot[data-slot="${s.key.toLowerCase()}"]`)
+        .classList.toggle("hidden", !cb.checked);
+      refreshStatus();
+    });
+  }
+
+  // Brand upload slots
+  const host = document.getElementById("brand-slots");
+  for (const s of SLOTS) {
+    const slot = document.createElement("div");
+    slot.className = "slot";
+    slot.dataset.slot = s.key.toLowerCase();
+    slot.dataset.brand = s.key;
+    slot.innerHTML = `
+      <div class="slot-head">
+        <span class="slot-avatar">${(s.cfg.label || s.key).slice(0,2).toUpperCase()}</span>
+        <span class="slot-name">${s.cfg.label}</span>
+      </div>
+      <div class="slot-row">
+        <div class="file-pick">
+          <label for="file-${s.key.toLowerCase()}">Workbook</label>
+          <input type="file" id="file-${s.key.toLowerCase()}" accept=".xlsx,.xlsm,.xls,.xlsb,.csv" />
+          <div class="file-meta" id="meta-${s.key.toLowerCase()}">No file selected.</div>
+        </div>
+        <div>
+          <label for="sheet-${s.key.toLowerCase()}">Sheet</label>
+          <div id="sheet-wrap-${s.key.toLowerCase()}">
+            <select id="sheet-${s.key.toLowerCase()}" disabled><option>—</option></select>
+          </div>
+          <div class="file-meta" id="sheet-meta-${s.key.toLowerCase()}"></div>
+        </div>
+      </div>
+      <div class="slot-error" id="err-${s.key.toLowerCase()}" hidden></div>
+    `;
+    host.appendChild(slot);
+  }
+
+  // Wire file inputs
+  for (const s of SLOTS) {
+    const slot = s.key.toLowerCase();
+    document.getElementById(`file-${slot}`).addEventListener("change", (e) =>
+      handleFileChange(slot, e.target.files[0], s.cfg));
+    document.getElementById(`sheet-${slot}`).addEventListener("change", (e) =>
+      handleSheetChange(slot, e.target.value, "user"));
+  }
+  document.getElementById("file-backend").addEventListener("change", (e) =>
+    handleFileChange("backend", e.target.files[0], { preferred_sheets: BACKEND_PREFERRED_SHEETS, header_row: 1 }));
+  document.getElementById("sheet-backend").addEventListener("change", (e) =>
+    handleSheetChange("backend", e.target.value, "user"));
+
+  document.getElementById("month").addEventListener("input", refreshStatus);
+  document.getElementById("run").addEventListener("click", runReconcile);
+
+  refreshStatus();
+}
+
+async function handleFileChange(slot, file, cfg) {
+  const errEl = document.getElementById(`err-${slot}`);
+  const slotEl = document.querySelector(`.slot[data-slot="${slot}"]`);
+  errEl.hidden = true;
+  if (!file) {
+    STATE[slot] = null;
+    document.getElementById(`meta-${slot}`).textContent = "No file selected.";
+    setSheetDropdown(slot, [], null, null);
+    slotEl.classList.remove("has-file", "error");
+    refreshStatus();
+    return;
+  }
+  document.getElementById(`meta-${slot}`).textContent =
+    `${file.name} · ${(file.size / 1024).toFixed(1)} KB · parsing…`;
+  try {
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, { type: "array", cellDates: true });
+    const sheets = wb.SheetNames || [];
+    const rowCounts = {};
+    for (const sn of sheets) {
+      const ref = wb.Sheets[sn]["!ref"];
+      const range = ref ? XLSX.utils.decode_range(ref) : { s:{r:0}, e:{r:-1} };
+      rowCounts[sn] = (range.e.r - range.s.r);   // approx row count
+    }
+    STATE[slot] = { file, workbook: wb, sheets, rowCounts, sheet: null, badge: null };
+    document.getElementById(`meta-${slot}`).textContent =
+      `${file.name} · ${(file.size / 1024).toFixed(1)} KB · ${sheets.length} sheet${sheets.length===1?"":"s"}`;
+
+    const pick = autoSelectSheet(slot, sheets, rowCounts, cfg.preferred_sheets || []);
+    setSheetDropdown(slot, sheets, pick.sheet, pick.badge);
+    handleSheetChange(slot, pick.sheet, "auto");
+    slotEl.classList.add("has-file");
+    slotEl.classList.remove("error");
+  } catch (exc) {
+    errEl.hidden = false;
+    errEl.textContent = "Could not open workbook: " + exc.message;
+    slotEl.classList.add("error");
+    STATE[slot] = null;
+  }
+  refreshStatus();
+}
+
+function autoSelectSheet(slot, sheets, rowCounts, preferred) {
+  if (!sheets.length) return { sheet: null, badge: "error" };
+  // Rule 1 — last-used (localStorage)
+  let stored = null;
+  try { stored = localStorage.getItem(LS_KEY(slot)); } catch (_) {}
+  if (stored && sheets.includes(stored)) return { sheet: stored, badge: "last-used" };
+  // Rule 2 — preferred (case-insensitive match within candidates)
+  if (preferred && preferred.length) {
+    const lc = sheets.map(s => s.toLowerCase());
+    for (const p of preferred) {
+      const idx = lc.indexOf(p.toLowerCase());
+      if (idx >= 0) return { sheet: sheets[idx], badge: "preferred" };
+    }
+  }
+  // Rule 3 — largest by row count
+  if (sheets.length > 1) {
+    let best = sheets[0], bestN = -1;
+    for (const sn of sheets) {
+      if (rowCounts[sn] > bestN) { best = sn; bestN = rowCounts[sn]; }
+    }
+    return { sheet: best, badge: "largest" };
+  }
+  // Rule 4 — first sheet
+  return { sheet: sheets[0], badge: "first" };
+}
+
+function setSheetDropdown(slot, sheets, selected, badge) {
+  const wrap = document.getElementById(`sheet-wrap-${slot}`);
+  const meta = document.getElementById(`sheet-meta-${slot}`);
+  wrap.innerHTML = "";
+  meta.innerHTML = "";
+
+  if (!sheets || !sheets.length) {
+    const sel = document.createElement("select");
+    sel.id = `sheet-${slot}`; sel.disabled = true;
+    sel.innerHTML = "<option>—</option>";
+    wrap.appendChild(sel);
+    return;
+  }
+
+  // CSV / single-sheet workbook -> render a static label
+  if (sheets.length === 1) {
+    const label = document.createElement("div");
+    label.className = "static-sheet";
+    label.id = `sheet-${slot}`;
+    label.textContent = sheets[0];
+    label.dataset.value = sheets[0];
+    // Hidden select for form-like reads
+    const hidden = document.createElement("input");
+    hidden.type = "hidden"; hidden.id = `sheet-${slot}-hidden`;
+    hidden.value = sheets[0];
+    wrap.appendChild(label);
+    wrap.appendChild(hidden);
+    meta.innerHTML = `Only one sheet <span class="badge csv">single sheet</span>`;
+    return;
+  }
+
+  const sel = document.createElement("select");
+  sel.id = `sheet-${slot}`;
+  for (const sn of sheets) {
+    const opt = document.createElement("option");
+    opt.value = sn; opt.textContent = sn;
+    if (sn === selected) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener("change", (e) => handleSheetChange(slot, e.target.value, "user"));
+  wrap.appendChild(sel);
+
+  if (badge) {
+    meta.innerHTML = `Auto-picked <span class="badge ${badge}">${badge.replace("-", " ")}</span>`;
+  }
+}
+
+function handleSheetChange(slot, sheetName, source) {
+  if (!STATE[slot]) return;
+  STATE[slot].sheet = sheetName;
+  try { localStorage.setItem(LS_KEY(slot), sheetName); } catch (_) {}
+  const meta = document.getElementById(`sheet-meta-${slot}`);
+  if (source === "user" && meta) {
+    meta.innerHTML = `Manual <span class="badge last-used">user pick</span>`;
+  }
+  refreshStatus();
+}
+
+function getSelectedSheet(slot) {
+  const el = document.getElementById(`sheet-${slot}`);
+  if (!el) return null;
+  if (el.tagName === "SELECT") return el.value;
+  // static-sheet div
+  return el.dataset.value || null;
+}
+
+function refreshStatus() {
+  const month = document.getElementById("month").value.trim();
+  document.getElementById("s-month").textContent = month || "—";
+
+  const activeBrands = SLOTS.filter(s => {
+    const lbl = document.querySelector(`.brand-chip[data-key="${s.key}"]`);
+    return lbl && lbl.classList.contains("active");
+  });
+  document.getElementById("s-brands").textContent = String(activeBrands.length);
+
+  let filesUploaded = 0, sheetsResolved = 0;
+  for (const s of activeBrands) {
+    const slot = s.key.toLowerCase();
+    if (STATE[slot] && STATE[slot].workbook) {
+      filesUploaded++;
+      const sn = getSelectedSheet(slot);
+      if (sn && STATE[slot].sheets.includes(sn)) sheetsResolved++;
+    }
+  }
+  document.getElementById("s-files").textContent = `${filesUploaded} / ${activeBrands.length}`;
+  document.getElementById("s-sheets").textContent = `${sheetsResolved} / ${activeBrands.length}`;
+
+  const bk = STATE.backend && STATE.backend.workbook;
+  const bkSheet = bk && getSelectedSheet("backend");
+  const bkOk = bk && bkSheet && STATE.backend.sheets.includes(bkSheet);
+  document.getElementById("s-backend").textContent = bkOk
+    ? "ready · sheet: " + bkSheet
+    : (bk ? "sheet not picked" : "missing");
+
+  const ready = filesUploaded > 0
+    && filesUploaded === activeBrands.length
+    && sheetsResolved === activeBrands.length
+    && bkOk;
+  const pill = document.getElementById("ready-pill");
+  pill.classList.toggle("ready", ready);
+  pill.classList.toggle("not-ready", !ready);
+  pill.textContent = ready ? "Ready" : "Not ready";
+
+  const btn = document.getElementById("run");
+  btn.disabled = !ready;
+  document.getElementById("run-hint").textContent = ready
+    ? "All inputs ready. Click Reconcile."
+    : "Pick brands, upload files, choose sheets to enable.";
+}
+
+/* ============================================================
+ * Reconcile run
+ * ============================================================ */
+async function runReconcile() {
+  const month = document.getElementById("month").value.trim() || null;
+  const progress = document.getElementById("progress");
+  const progressText = document.getElementById("progress-text");
+  progress.classList.add("visible");
+
+  try {
+    // 1. Load backend master rows
+    progressText.textContent = "Loading backend master…";
+    const bkSheet = getSelectedSheet("backend");
+    const bkWs = STATE.backend.workbook.Sheets[bkSheet];
+    const bkAoa = XLSX.utils.sheet_to_json(bkWs, { header: 1, defval: null, raw: false });
+    const headers = (bkAoa[0] || []).map(h => h == null ? "" : String(h));
+    let masterRows = [];
+    for (let i = 1; i < bkAoa.length; i++) {
+      const row = bkAoa[i];
+      if (!row || row.every(c => c == null || c === "")) continue;
+      const r = {};
+      for (let j = 0; j < headers.length; j++) r[headers[j]] = row[j] == null ? null : row[j];
+      // Ensure every MASTER_FIELDS key exists (legacy 42-col master gets blank ID/Title)
+      for (const f of MASTER_FIELDS) if (!(f in r)) r[f] = null;
+      masterRows.push(r);
+    }
+
+    // 2. Per-brand pass, in display order, threading masterRows forward
+    const perBrand = [];
+    for (const s of SLOTS) {
+      const lbl = document.querySelector(`.brand-chip[data-key="${s.key}"]`);
+      if (!lbl || !lbl.classList.contains("active")) continue;
+      const slot = s.key.toLowerCase();
+      if (!STATE[slot] || !STATE[slot].workbook) continue;
+
+      progressText.textContent = `Folding ${s.cfg.label}…`;
+      await new Promise(r => setTimeout(r, 0));   // yield to paint
+      const sheet = getSelectedSheet(slot);
+      const sourceRows = readSourceRows(STATE[slot].workbook, sheet, s.cfg.header_row);
+      const result = reconcileBrand(s.key, s.cfg, sourceRows, masterRows, month);
+      perBrand.push({ key: s.key, label: s.cfg.label, sheet, sourceCount: sourceRows.length, ...result });
+    }
+
+    // 3. Write outputs
+    progressText.textContent = "Generating Updated Master…";
+    await new Promise(r => setTimeout(r, 0));
+    const monthSlug = fmtMonthYYYY(month);
+    const masterBuf = writeUpdatedMaster(masterRows);
+    const masterName = `Updated_Master_${monthSlug}.xlsx`;
+    const masterLink = downloadBlob(masterBuf, masterName);
+
+    const brandLinks = perBrand.map(b => {
+      const buf = writeChangeReport(b.label, b);
+      return downloadBlob(buf, `${b.label.replace(/\s+/g, "_")}_Change_Report_${monthSlug}.xlsx`);
+    });
+
+    renderResults(perBrand, masterLink, brandLinks, masterRows.length, month);
+  } catch (exc) {
+    console.error(exc);
+    alert("Reconciliation failed: " + exc.message);
+  } finally {
+    progress.classList.remove("visible");
+  }
+}
+
+function renderResults(perBrand, masterLink, brandLinks, masterCount, month) {
+  const sec = document.getElementById("results");
+  const body = document.getElementById("results-body");
+  body.innerHTML = "";
+
+  const agg = perBrand.reduce((a, b) => {
+    a.NEW += b.counts.NEW; a.REFRESH += b.counts.REFRESH;
+    a.MIGRATED += b.counts.MIGRATED; a.REACTIVATED += b.counts.REACTIVATED;
+    a.ORPHAN += b.counts.ORPHAN; a.INACTIVATED += b.counts.INACTIVATED;
+    a.SOURCE += b.sourceCount;
+    return a;
+  }, { NEW:0, REFRESH:0, MIGRATED:0, REACTIVATED:0, ORPHAN:0, INACTIVATED:0, SOURCE:0 });
+
+  const aggDiv = document.createElement("div");
+  aggDiv.className = "agg";
+  aggDiv.innerHTML = `
+    <div class="stat"><div class="n">${agg.SOURCE}</div><div class="l">Source rows</div></div>
+    <div class="stat"><div class="n">${masterCount}</div><div class="l">Master rows</div></div>
+    <div class="stat"><div class="n">${agg.NEW}</div><div class="l">New</div></div>
+    <div class="stat"><div class="n">${agg.REFRESH}</div><div class="l">Refreshed</div></div>
+    <div class="stat"><div class="n">${agg.MIGRATED}</div><div class="l">Migrated</div></div>
+    <div class="stat"><div class="n">${agg.REACTIVATED}</div><div class="l">Reactivated</div></div>
+    <div class="stat"><div class="n">${agg.INACTIVATED}</div><div class="l">Inactivated</div></div>
+    <div class="stat"><div class="n">${agg.ORPHAN}</div><div class="l">Orphans</div></div>
+  `;
+  body.appendChild(aggDiv);
+
+  const downloads = document.createElement("div");
+  downloads.className = "download-row";
+  downloads.appendChild(masterLink);
+  for (const a of brandLinks) downloads.appendChild(a);
+  body.appendChild(downloads);
+
+  const tbl = document.createElement("table");
+  tbl.className = "brand-table";
+  tbl.innerHTML = `
+    <thead><tr><th>Brand</th><th>Sheet</th><th>Source rows</th><th>New</th>
+    <th>Refresh</th><th>Migrated</th><th>Reactivated</th><th>Inactivated</th><th>Orphan</th></tr></thead>
+    <tbody>${perBrand.map(b => `
+      <tr><td>${b.label}</td><td>${b.sheet}</td><td>${b.sourceCount}</td>
+      <td>${b.counts.NEW}</td><td>${b.counts.REFRESH}</td><td>${b.counts.MIGRATED}</td>
+      <td>${b.counts.REACTIVATED}</td><td>${b.counts.INACTIVATED}</td><td>${b.counts.ORPHAN}</td></tr>
+    `).join("")}</tbody>
+  `;
+  body.appendChild(tbl);
+
+  sec.style.display = "";
+  sec.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ============================================================
+ * boot
+ * ============================================================ */
+buildUI();
+
+// Smoke-check the schema in the console (handy when iterating).
+console.log(`v3 prototype loaded. MASTER_FIELDS=${MASTER_FIELDS.length}, brands=${Object.keys(BRANDS).length}, approved-domains=${APPROVED_EMAIL_DOMAINS.size}`);
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Build / packaging artifacts
+build/
+dist/
+*.exe
+*.spec.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Logs & scratch
+*.log
+error.log
+_bashtest.txt
+
+# OS
+.DS_Store
+Thumbs.db

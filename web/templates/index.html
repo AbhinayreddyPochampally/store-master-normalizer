@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Store Master Reconciliation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+  <main class="shell">
+
+    <header class="page-header">
+      <div class="title-row">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/>
+            <path d="M3 5v6c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+            <path d="M3 11v6c0 1.66 4.03 3 9 3s9-1.34 9-3v-6"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="headline">Store Master Reconciliation</h1>
+          <p class="subtitle">Fold monthly brand exports back into the canonical backend master.</p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <span class="abfrl-pill">ABFRL &middot; local utility</span>
+        <span class="engine-meta">Engine v{{ engine_version }} &middot; local run</span>
+      </div>
+    </header>
+
+    <form id="convert-form"
+          hx-post="/reconcile"
+          hx-target="#results"
+          hx-swap="innerHTML"
+          hx-encoding="multipart/form-data"
+          hx-disabled-elt="this">
+
+      <div class="layout">
+
+        <div class="col-main">
+
+          <!-- Card 1: Setup -->
+          <section class="card setup-card">
+            <div class="progress" aria-hidden="true"></div>
+            <div class="card-title">
+              <div class="ico ico-accent" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+              </div>
+              <h2>Run setup</h2>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="month">Month <span class="optional">(optional)</span></label>
+                {# Single bordered input -- the calendar lives as a background
+                   image, eliminating the nested-box look that the .input-with-icon
+                   wrapper produced. #}
+                <input type="text" id="month" name="month"
+                       class="input-calendar"
+                       placeholder="e.g. May 2026" />
+                <p class="hint">For labelling the output files; not used by the engine.</p>
+              </div>
+
+              <div class="field">
+                <label class="field-label">Brands in scope</label>
+                <p class="hint" style="margin: 0">Tick each brand you want to reconcile, then upload its file below.</p>
+                <div class="brand-checks">
+                  {% for key, cfg in brands.items() %}
+                    <label class="brand-check">
+                      <input type="checkbox" class="brand-toggle"
+                             value="{{ key }}" data-key="{{ key }}" checked />
+                      <span>{{ cfg.label }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {# v0.4.1: in-card "Upload one file per brand…" banner removed.
+               The numbered Setup / Upload Files card headers are the procedure;
+               the operator does not need it restated here. #}
+          </section>
+
+          <!-- Card 2: Upload Files -->
+          <section class="card upload-card">
+            <div class="progress" aria-hidden="true"></div>
+            <div class="card-title">
+              <div class="ico ico-accent" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <h2>Brand exports</h2>
+            </div>
+
+            <div class="upload-section">
+              <h3 class="section-h sr-only">Brand export files</h3>
+              <div id="brand-rows">
+                {% for key, cfg in brands.items() %}
+                  <div class="upload-row brand-row" data-key="{{ key }}">
+                    <div class="brand-pick">
+                      <span class="brand-avatar brand-avatar-{{ key|lower }}" aria-hidden="true">
+                        {% if key == "PF" %}PF{% elif key == "TCNS" %}TCNS{% else %}{{ cfg.label[:1]|upper }}{% endif %}
+                      </span>
+                      <span class="brand-label">{{ cfg.label }}</span>
+                      <input type="hidden" name="brand_keys" value="{{ key }}" />
+                    </div>
+
+                    <div class="dropzone empty" data-input="src_{{ key }}">
+                      <div class="dz-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <path d="M14 2v6h6"/>
+                          <line x1="9" y1="13" x2="15" y2="13"/>
+                          <line x1="9" y1="17" x2="15" y2="17"/>
+                        </svg>
+                      </div>
+                      <div class="dz-body">
+                        <div class="dz-title">Drop {{ cfg.label }} export here</div>
+                        <div class="dz-meta dz-sub">.xlsx or .xlsb</div>
+                      </div>
+                      {# v0.5.2: every brand now exposes a sheet picker, not
+                         just TCNS.  The input is pre-filled with cfg.default_sheet
+                         on first load; JS hydrates it from localStorage on
+                         subsequent sessions, then runs onBlur validation
+                         against the uploaded workbook. #}
+                      <div class="dz-sheet-field" onclick="event.stopPropagation();">
+                        <label for="sheet_override__{{ key }}" class="dz-sheet-label">Sheet</label>
+                        <input type="text" id="sheet_override__{{ key }}"
+                               name="sheet_override__{{ key }}"
+                               value="{{ cfg.default_sheet }}"
+                               class="dz-sheet-input"
+                               data-slot="{{ key|lower }}"
+                               data-default-sheet="{{ cfg.default_sheet }}"
+                               data-header-row="{{ cfg.header_row }}"
+                               aria-label="Sheet name for {{ cfg.label }} workbook" />
+                      </div>
+                      <div class="dz-actions">
+                        <button type="button" class="dz-menu" aria-label="File actions" title="File actions">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <circle cx="12" cy="5"  r="1.7"/>
+                            <circle cx="12" cy="12" r="1.7"/>
+                            <circle cx="12" cy="19" r="1.7"/>
+                          </svg>
+                        </button>
+                      </div>
+                      {# v0.5.2: accept both formats for every brand; the
+                         per-row sheet picker handles the format-agnostic
+                         "which sheet inside the workbook" question. #}
+                      <input type="file" id="src_{{ key }}" name="source__{{ key }}"
+                             accept=".xlsx,.xlsb" />
+                    </div>
+                    {# v0.5.2: inline validation message slot for the sheet
+                       picker.  Populated by onBlur via /validate-sheet. #}
+                    <div class="sheet-validation" data-slot="{{ key|lower }}" hidden></div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+
+          </section>
+
+          <!-- Card 3: Backend Master (own card per mockup) -->
+          <section class="card backend-card">
+            <div class="card-title">
+              <div class="ico ico-accent" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+              </div>
+              <h2>Backend master</h2>
+            </div>
+            <div class="dropzone empty" data-input="master">
+              <div class="dz-icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <path d="M14 2v6h6"/>
+                </svg>
+              </div>
+              <div class="dz-body">
+                <div class="dz-title">Drop or click to upload backend master (.xlsx)</div>
+                <div class="dz-meta dz-sub">Current canonical workbook</div>
+              </div>
+              {# v0.5.2: Backend Master now has two sheets (Backend Updated
+                 Data + Reference); user picks which one carries the data.
+                 Default comes from _backend.default_sheet in brands.json. #}
+              <div class="dz-sheet-field" onclick="event.stopPropagation();">
+                <label for="sheet_override__backend" class="dz-sheet-label">Sheet</label>
+                <input type="text" id="sheet_override__backend"
+                       name="sheet_override__backend"
+                       value="{{ backend_cfg.default_sheet }}"
+                       class="dz-sheet-input"
+                       data-slot="backend"
+                       data-default-sheet="{{ backend_cfg.default_sheet }}"
+                       data-header-row="1"
+                       aria-label="Sheet name for backend master workbook" />
+              </div>
+              <div class="dz-actions">
+                <span class="dz-check" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2.5"
+                       stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                    <polyline points="9 12 11 14 15 10"/>
+                  </svg>
+                </span>
+                <button type="button" class="dz-replace">Replace</button>
+              </div>
+              <input type="file" id="master" name="master" accept=".xlsx" required />
+            </div>
+            <div class="sheet-validation" data-slot="backend" hidden></div>
+          </section>
+
+          <!-- Run button row -->
+          <div class="run-row">
+            <button type="submit" class="btn btn-primary run-button" id="run-button">
+              <span class="spinner" aria-hidden="true"></span>
+              <span class="btn-label">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px">
+                  <polygon points="5 3 19 12 5 21"/>
+                </svg>
+                Run reconciliation
+              </span>
+              <span class="btn-label-loading">Reconciling&hellip;</span>
+            </button>
+            <span class="run-hint" id="run-hint">
+              <span class="ico-inline" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+              Upload backend master to continue
+            </span>
+          </div>
+
+        </div>
+
+        <!-- Sidebar -->
+        <aside class="col-side">
+
+          <section class="card status-card">
+            <div class="card-title">
+              <div class="ico ico-success" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+              <h2>Run status</h2>
+              <span class="ready-pill not-ready" id="ready-pill" aria-live="polite">
+                <span class="ico-inline" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" stroke-width="2.5"
+                       stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </span>
+                <span id="ready-pill-label">Not ready</span>
+              </span>
+            </div>
+
+            <div class="row"><span class="label">Month label</span>
+              <span class="value muted-value" id="status-month-val">&mdash;</span></div>
+            <div class="row"><span class="label">Brands selected</span>
+              <span class="value" id="status-brand-count-val">0</span></div>
+            <div class="row"><span class="label">Brand exports</span>
+              <span class="value muted-value" id="status-source-val">0 / 0 uploaded</span></div>
+            <div class="row"><span class="label">TCNS sheet</span>
+              <span class="value muted-value" id="status-tcns-sheet-val">&mdash;</span></div>
+            <div class="row"><span class="label">Backend master</span>
+              <span class="value muted-value" id="status-master-val">missing</span></div>
+
+            <h3 class="section-h section-h-small">Per-brand readiness</h3>
+            <div class="readiness-list" id="readiness-list">
+              {% for key, cfg in brands.items() %}
+                <div class="readiness-item" data-key="{{ key }}">
+                  <span class="brand-avatar brand-avatar-{{ key|lower }}">{{ cfg.label[:2]|upper }}</span>
+                  <span class="brand-name">{{ cfg.label }}</span>
+                  <span class="ready-badge waiting" data-state="waiting">
+                    <span class="ico-inline" aria-hidden="true">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="2.5"
+                           stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                      </svg>
+                    </span>
+                    waiting for file
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+
+            <div class="overall-progress">
+              <div class="row" style="margin-bottom: 6px">
+                <span class="label">Overall progress</span>
+                <span class="value" id="progress-text">0 of 0 complete</span>
+              </div>
+              <div class="progressbar-track"><div class="progressbar-fill" id="progress-fill" style="width:0%"></div></div>
+            </div>
+
+            <div class="when-complete">
+              <span class="ico-inline" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <path d="M14 2v6h6"/>
+                </svg>
+              </span>
+              <div>
+                <div class="when-complete-title">When complete</div>
+                <div class="when-complete-sub" id="when-complete-sub">1 consolidated master + N change reports</div>
+              </div>
+            </div>
+          </section>
+
+          {# v0.4.1 (post-C1 redesign): "How it works" right-rail card removed.
+             The numbered Setup / Upload Files cards in the main column ARE
+             the procedure; a second explainer alongside duplicated it.  The
+             footer "Learn more →" modal remains as a quiet escape hatch for
+             new teammates. #}
+
+        </aside>
+      </div>
+    </form>
+
+    {# G1: full-screen reconciliation overlay.  Shown while htmx is in
+       flight on the /reconcile request; hidden again after the response
+       lands.  The server runs synchronously so we can't stream real
+       per-brand progress -- we run an indeterminate animation plus a
+       cycling brand-name caption to communicate "still working." #}
+    <div id="reconcile-overlay" class="reconcile-overlay" aria-hidden="true">
+      <div class="reconcile-panel" role="status" aria-live="polite">
+        <div class="reconcile-spinner" aria-hidden="true">
+          <svg width="44" height="44" viewBox="0 0 44 44">
+            <circle cx="22" cy="22" r="18" stroke="var(--accent-soft)" stroke-width="4" fill="none"/>
+            <circle cx="22" cy="22" r="18" stroke="var(--accent)" stroke-width="4" fill="none"
+                    stroke-linecap="round" stroke-dasharray="30 80"
+                    transform="rotate(-90 22 22)">
+              <animateTransform attributeName="transform" type="rotate"
+                from="-90 22 22" to="270 22 22" dur="1.1s" repeatCount="indefinite"/>
+            </circle>
+          </svg>
+        </div>
+        <h2 class="reconcile-title">Reconciling&hellip;</h2>
+        <p class="reconcile-sub" id="reconcile-sub">Folding brand exports into the master</p>
+        <div class="reconcile-progressbar"><div class="reconcile-progressbar-fill"></div></div>
+        <p class="reconcile-hint">This usually takes 5&ndash;15 seconds for a four-brand run.</p>
+      </div>
+    </div>
+
+    <section id="results" aria-live="polite"></section>
+
+    {% if recent_runs %}
+    {# Recent-runs panel: persists for the life of the EXE so closing the
+       browser tab doesn't lose access to past consolidated masters and
+       change reports.  Wiped on EXE restart along with temp/. #}
+    <section class="card recent-runs-card">
+      <div class="card-title">
+        <div class="ico ico-info" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h2>Recent runs</h2>
+        <span class="meta-inline">Available until this window is closed</span>
+      </div>
+      <table class="recent-runs-table">
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Month</th>
+            <th>Brands folded in</th>
+            <th>Consolidated master</th>
+            <th>Change reports</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for run in recent_runs %}
+            <tr>
+              <td class="when-col">{{ run.completed_on }} &middot; {{ run.completed_at }}</td>
+              <td class="month-col">{{ run.month }}</td>
+              <td class="brands-col">
+                {% for b in run.brands %}
+                  <span class="recent-brand-tag">{{ b }}</span>
+                {% endfor %}
+              </td>
+              <td>
+                <a class="btn-pill" href="/download/{{ run.run_id }}/{{ run.consolidated_file }}">
+                  <span class="ico-inline" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                  </span>
+                  Master
+                </a>
+              </td>
+              <td class="reports-col">
+                {% for cr in run.change_reports %}
+                  <a class="btn-pill compact" href="/download/{{ run.run_id }}/{{ cr.filename }}">{{ cr.brand }}</a>
+                {% endfor %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
+
+    <footer class="page-footer">
+      <span class="lock-line">
+        <span class="ico-inline" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </span>
+        Everything runs locally on this machine. Files never leave your computer.
+      </span>
+      <button type="button" class="learn-more" onclick="document.getElementById('what-modal').showModal()">
+        <span class="ico-inline" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+        </span>
+        How to use <span aria-hidden="true">&rsaquo;</span>
+      </button>
+    </footer>
+  </main>
+
+  <dialog id="what-modal" class="what-modal">
+    <div class="modal-body">
+      <h3>What this tool does</h3>
+      <p>You upload one or more brand monthly exports plus the backend master. The tool reads each brand's mapping rules from <code>brands.json</code> and reconciles every store cell-by-cell, ignoring cosmetic differences like case, type, or date format.</p>
+      <p>You get back, per brand, an updated master and a change report. Aggregate counts across all selected brands appear in the validation summary.</p>
+      <p>Nothing is sent anywhere &mdash; it all happens locally on your computer.</p>
+      <button class="modal-close" onclick="document.getElementById('what-modal').close()">Got it</button>
+    </div>
+  </dialog>
+
+  <style>
+    .muted-value { color: var(--text-muted) !important; }
+    .row.success .value { color: var(--success) !important; }
+    .brand-checks {
+      display: flex; flex-wrap: wrap; gap: 8px 14px;
+      margin-top: 6px;
+    }
+    /* v0.4.1 mockup: .brand-check itself + active state live in style.css
+       so they can't be overridden here.  Just the input accent stays. */
+    .brand-check input { accent-color: #fff; }
+    .brand-row.hidden { display: none; }
+    .brand-pick .brand-label {
+      flex: 1; font-size: 13px; font-weight: 500; color: var(--text-primary);
+    }
+    .sheet-mini {
+      width: 70px !important;
+      padding: 4px 8px !important;
+      font-size: 12px !important;
+      border: 1px solid var(--border-strong) !important;
+      border-radius: 5px !important;
+      margin-left: 6px;
+    }
+  </style>
+
+  <script>
+    // Show / hide a brand upload row based on its toggle checkbox.
+    function refreshRows() {
+      var toggles = document.querySelectorAll('.brand-toggle');
+      var selected = [];
+      toggles.forEach(function(t) {
+        var key = t.getAttribute('data-key');
+        var row = document.querySelector('.brand-row[data-key="' + key + '"]');
+        if (t.checked) {
+          row.classList.remove('hidden');
+          selected.push(t.parentElement.textContent.trim());
+        } else {
+          row.classList.add('hidden');
+          // Clear the file when un-toggled so it isn't submitted.
+          var input = row.querySelector('input[type=file]');
+          if (input) input.value = '';
+          var dz = row.querySelector('.dropzone');
+          if (dz) dz.classList.remove('has-file');
+        }
+      });
+      var sv = document.getElementById('status-brand-val');
+      if (sv) sv.textContent = selected.length ? selected.join(', ') : '—';
+      updateStatus();
+    }
+
+    function wireDropzone(dz) {
+      if (!dz) return;
+      var input = dz.querySelector('input[type=file]');
+      var title = dz.querySelector('.dz-title');
+      var sub   = dz.querySelector('.dz-meta') || dz.querySelector('.dz-sub');
+      var menuBtn = dz.querySelector('.dz-menu');
+      var sheetField = dz.querySelector('.dz-sheet-field');
+      var defaultTitle = title.textContent.trim();
+      var defaultSub   = sub.textContent.trim();
+      function fmtSize(n) {
+        if (n < 1024) return n + ' B';
+        if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+        return (n/1024/1024).toFixed(2) + ' MB';
+      }
+      function update() {
+        if (input.files && input.files.length) {
+          var f = input.files[0];
+          title.textContent = f.name;
+          var sheetIn = dz.querySelector('.dz-sheet-input');
+          var sheetTag = sheetIn ? ' · sheet ' + (sheetIn.value || '—') : '';
+          sub.textContent = fmtSize(f.size) + sheetTag;
+          dz.classList.add('has-file'); dz.classList.remove('empty');
+        } else {
+          title.textContent = defaultTitle;
+          sub.textContent = defaultSub;
+          dz.classList.remove('has-file'); dz.classList.add('empty');
+        }
+        updateStatus();
+      }
+      input.addEventListener('change', update);
+
+      // G2: three-dot menu — replace / remove
+      if (menuBtn) {
+        var menu = null;
+        function closeMenu() {
+          if (menu) { menu.remove(); menu = null; }
+          document.removeEventListener('click', onDocClick);
+        }
+        function onDocClick(e) {
+          if (menu && !menu.contains(e.target) && e.target !== menuBtn) closeMenu();
+        }
+        menuBtn.addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          if (menu) { closeMenu(); return; }
+          menu = document.createElement('div');
+          menu.className = 'dz-menu-pop';
+          var hasFile = input.files && input.files.length;
+          menu.innerHTML =
+            '<button type="button" class="dz-menu-item" data-act="replace">' +
+              (hasFile ? 'Replace file' : 'Choose file') + '</button>' +
+            (hasFile ? '<button type="button" class="dz-menu-item danger" data-act="remove">Remove</button>' : '');
+          menuBtn.parentElement.appendChild(menu);
+          menu.querySelectorAll('button').forEach(function(b) {
+            b.addEventListener('click', function(evt) {
+              evt.preventDefault(); evt.stopPropagation();
+              if (b.dataset.act === 'replace') { input.click(); }
+              if (b.dataset.act === 'remove')  { input.value = ''; update(); }
+              closeMenu();
+            });
+          });
+          // Defer so the same click that opened it doesn't immediately close it.
+          setTimeout(function(){ document.addEventListener('click', onDocClick); }, 0);
+        });
+      }
+
+      // Live-sync the meta line when the sheet input changes.
+      if (sheetField) {
+        var sheetInputEl = sheetField.querySelector('.dz-sheet-input');
+        if (sheetInputEl) sheetInputEl.addEventListener('input', update);
+      }
+
+      ['dragenter','dragover'].forEach(function(ev) {
+        dz.addEventListener(ev, function(e){ e.preventDefault(); dz.classList.add('dragover'); });
+      });
+      ['dragleave','drop'].forEach(function(ev) {
+        dz.addEventListener(ev, function(){ dz.classList.remove('dragover'); });
+      });
+    }
+
+    function updateStatus() {
+      // Brand rollups.
+      var n = 0, brand_total = 0;
+      var ready_brands = [];
+      document.querySelectorAll('.brand-row').forEach(function(row) {
+        var key = row.getAttribute('data-key');
+        if (row.classList.contains('hidden')) {
+          markReadiness(key, 'skipped');
+          return;
+        }
+        brand_total++;
+        var input = row.querySelector('input[type=file]');
+        var hasFile = input && input.files && input.files.length;
+        if (hasFile) { n++; ready_brands.push(key); markReadiness(key, 'ready'); }
+        else { markReadiness(key, 'waiting'); }
+      });
+
+      // Brand exports row + Brands selected.
+      var srcVal = document.getElementById('status-source-val');
+      if (srcVal) {
+        srcVal.textContent = (brand_total ? n + ' / ' + brand_total + ' uploaded' : '—');
+        srcVal.classList.toggle('muted-value', n === 0);
+        srcVal.parentElement.classList.toggle('success', n > 0 && n === brand_total);
+      }
+      var brandCountVal = document.getElementById('status-brand-count-val');
+      if (brandCountVal) brandCountVal.textContent = String(brand_total);
+
+      // Month label echo.
+      var monthInput = document.getElementById('month');
+      var monthVal = document.getElementById('status-month-val');
+      if (monthInput && monthVal) {
+        var mv = (monthInput.value || '').trim();
+        monthVal.textContent = mv || '—';
+        monthVal.classList.toggle('muted-value', !mv);
+      }
+
+      // TCNS sheet echo (only if TCNS is selected).
+      var tcnsSheetInput = document.querySelector('input[name="sheet_override__TCNS"]');
+      var tcnsRow = document.querySelector('.brand-row[data-key="TCNS"]');
+      var tcnsActive = tcnsRow && !tcnsRow.classList.contains('hidden');
+      var tcnsSheetVal = document.getElementById('status-tcns-sheet-val');
+      if (tcnsSheetVal) {
+        if (tcnsActive && tcnsSheetInput) {
+          tcnsSheetVal.textContent = (tcnsSheetInput.value || '—');
+          tcnsSheetVal.classList.toggle('muted-value', !tcnsSheetInput.value);
+        } else {
+          tcnsSheetVal.textContent = 'n/a';
+          tcnsSheetVal.classList.add('muted-value');
+        }
+      }
+
+      // Backend master.
+      var mstInput = document.getElementById('master');
+      var mstVal = document.getElementById('status-master-val');
+      var mstOk = mstInput && mstInput.files && mstInput.files.length > 0;
+      if (mstVal) {
+        mstVal.textContent = mstOk ? 'uploaded' : 'missing';
+        mstVal.classList.toggle('muted-value', !mstOk);
+        mstVal.classList.toggle('value-missing', !mstOk);
+        mstVal.parentElement.classList.toggle('success', mstOk);
+      }
+
+      // v0.5.2: also block "ready" when any sheet input has an active
+      // validation error.  smr_sheet_validation_state is updated by the
+      // onBlur fetch to /validate-sheet (see "Sheet picker" script).
+      var sheetErrors = false;
+      document.querySelectorAll('.sheet-validation[data-state="error"]').forEach(function(){
+        sheetErrors = true;
+      });
+
+      // Ready pill.
+      var ready = (n > 0) && mstOk && !sheetErrors;
+      var pill = document.getElementById('ready-pill');
+      var pillLabel = document.getElementById('ready-pill-label');
+      if (pill && pillLabel) {
+        pill.classList.toggle('not-ready', !ready);
+        pill.classList.toggle('ready', ready);
+        pillLabel.textContent = ready ? 'Ready' : 'Not ready';
+      }
+
+      // Run button disabled state + hint visibility.
+      var btn = document.getElementById('run-button');
+      var hint = document.getElementById('run-hint');
+      if (btn) {
+        btn.disabled = !ready;
+        btn.classList.toggle('disabled', !ready);
+      }
+      if (hint) {
+        hint.style.display = ready ? 'none' : '';
+        if (!mstOk) hint.querySelector('span:last-child') &&
+          (hint.lastChild.textContent = ' Upload backend master to continue');
+      }
+
+      // Overall progress: brand uploads + master + run-ready (not yet hit).
+      // Mockup says "4 of 6 complete" when 2/4 brands + master missing,
+      // i.e. each uploaded brand counts as 1, master counts as 1 final step.
+      var done = n + (mstOk ? 1 : 0);
+      var total = brand_total + 1;
+      var progressText = document.getElementById('progress-text');
+      var progressFill = document.getElementById('progress-fill');
+      if (progressText) progressText.textContent = done + ' of ' + total + ' complete';
+      if (progressFill) progressFill.style.width = (total ? Math.round(done * 100 / total) : 0) + '%';
+
+      // When-complete preview.
+      var wc = document.getElementById('when-complete-sub');
+      if (wc) {
+        wc.textContent = '1 consolidated master + ' + n + ' change report' + (n === 1 ? '' : 's');
+      }
+    }
+
+    function markReadiness(key, state) {
+      var item = document.querySelector('.readiness-item[data-key="' + key + '"]');
+      if (!item) return;
+      var badge = item.querySelector('.ready-badge');
+      if (!badge) return;
+      item.style.display = (state === 'skipped') ? 'none' : '';
+      badge.classList.remove('ready', 'waiting');
+      if (state === 'ready') {
+        badge.classList.add('ready');
+        badge.lastChild.nodeValue = ' ready';
+      } else if (state === 'waiting') {
+        badge.classList.add('waiting');
+        badge.lastChild.nodeValue = ' waiting for file';
+      }
+    }
+
+    document.querySelectorAll('.dropzone').forEach(wireDropzone);
+    document.querySelectorAll('.brand-toggle').forEach(function(t) {
+      t.addEventListener('change', refreshRows);
+    });
+    // v0.4.1 mockup: month + TCNS sheet name echo into the Run-status panel.
+    var monthEl = document.getElementById('month');
+    if (monthEl) monthEl.addEventListener('input', updateStatus);
+    var tcnsSheetEl = document.querySelector('input[name="sheet_override__TCNS"]');
+    if (tcnsSheetEl) tcnsSheetEl.addEventListener('input', updateStatus);
+
+    // v0.5.2 Sheet picker: per-upload sheet name picker for every brand
+    // row AND the Backend Master row.  Three jobs:
+    //   1. Hydrate the input from localStorage (key: smr.sheet.<slot>)
+    //      so the operator doesn't retype every month.  The Jinja-rendered
+    //      `value` is the first-use default from the table in brands.json;
+    //      localStorage wins on subsequent loads.
+    //   2. Persist on every change.
+    //   3. Validate against the uploaded workbook onBlur (and when the
+    //      file changes) by POSTing to /validate-sheet.  An error
+    //      annotation renders under the row; the engine refuses to start
+    //      while any validation slot is in error state.
+    (function() {
+      function lsKey(slot) { return 'smr.sheet.' + slot; }
+      function findFileInput(slot) {
+        if (slot === 'backend') return document.getElementById('master');
+        // Brand row data-keys are mixed-case; the sheet-input data-slot is
+        // lowercased.  Walk the brand-row by data-key (case-sensitive) by
+        // first matching on the upper-cased version.
+        var row = Array.from(document.querySelectorAll('.brand-row'))
+          .find(function(r) { return (r.dataset.key || '').toLowerCase() === slot; });
+        return row ? row.querySelector('input[type=file]') : null;
+      }
+      function findValidationSlot(slot) {
+        return document.querySelector('.sheet-validation[data-slot="' + slot + '"]');
+      }
+      function setValidation(slot, state, message, available) {
+        var node = findValidationSlot(slot);
+        if (!node) return;
+        if (state === 'idle' || !state) {
+          node.hidden = true;
+          node.removeAttribute('data-state');
+          node.textContent = '';
+        } else {
+          node.hidden = false;
+          node.setAttribute('data-state', state);
+          if (state === 'error') {
+            node.innerHTML = '<strong>Sheet error:</strong> ' + escapeHtml(message);
+            if (available && available.length) {
+              node.innerHTML += ' <span class="sheet-available">Available: ' +
+                available.map(function(s){ return '<code>' + escapeHtml(s) + '</code>'; }).join(', ') +
+                '.</span>';
+            }
+          } else if (state === 'ok') {
+            node.textContent = 'Sheet OK';
+          } else {
+            node.textContent = message || '';
+          }
+        }
+        updateStatus();
+      }
+      function escapeHtml(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function(c) {
+          return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+        });
+      }
+      function validate(input) {
+        var slot = input.dataset.slot;
+        var headerRow = parseInt(input.dataset.headerRow || '1', 10);
+        var fileInput = findFileInput(slot);
+        if (!fileInput || !fileInput.files || !fileInput.files.length) {
+          // No file yet -- clear any stale validation message.
+          setValidation(slot, 'idle');
+          return;
+        }
+        var sheetName = (input.value || '').trim();
+        if (!sheetName) {
+          setValidation(slot, 'error', 'Sheet name is required.', []);
+          return;
+        }
+        var fd = new FormData();
+        fd.append('file', fileInput.files[0]);
+        fd.append('sheet', sheetName);
+        fd.append('header_row', String(headerRow));
+        setValidation(slot, 'checking', 'Checking sheet…');
+        fetch('/validate-sheet', { method: 'POST', body: fd })
+          .then(function(r) { return r.json(); })
+          .then(function(j) {
+            if (j.ok) {
+              setValidation(slot, 'ok');
+              // First-sheet-detected placeholder hint (does NOT replace
+              // a user-typed value; the spec is explicit about that).
+              if (j.first_sheet && !input.dataset.userEdited) {
+                input.placeholder = j.first_sheet;
+              }
+            } else {
+              setValidation(slot, 'error', j.error || 'Sheet not found.',
+                            j.available_sheets || []);
+            }
+          })
+          .catch(function() {
+            setValidation(slot, 'error',
+              'Could not reach the validator. Check the Reconcile button output for engine errors.',
+              []);
+          });
+      }
+
+      var sheetInputs = document.querySelectorAll('.dz-sheet-input');
+      sheetInputs.forEach(function(input) {
+        var slot = input.dataset.slot;
+        var stored = null;
+        try { stored = localStorage.getItem(lsKey(slot)); } catch (_) {}
+        if (stored !== null && stored !== '') {
+          input.value = stored;
+        }
+        input.addEventListener('input', function() {
+          input.dataset.userEdited = '1';
+          try { localStorage.setItem(lsKey(slot), input.value); } catch (_) {}
+          // Echo into the readiness panel for the TCNS row (keeps old
+          // behavior) and clear any stale error so the user knows their
+          // edit was registered.
+          var node = findValidationSlot(slot);
+          if (node && node.getAttribute('data-state') === 'error') {
+            // keep the error visible until they blur -- otherwise they
+            // can't see "Available: ..." while typing the fix.
+          }
+          updateStatus();
+        });
+        input.addEventListener('blur', function() { validate(input); });
+        // Also re-validate when a new file is dropped in.
+        var fi = findFileInput(slot);
+        if (fi) fi.addEventListener('change', function() { validate(input); });
+      });
+    })();
+
+    refreshRows();
+    updateStatus();
+
+    // v0.4.1 C3: tiny sortable-table helper.  Tables marked with
+    // data-sortable get click-to-sort headers.  Sort key is the column
+    // header's data-sort-key; numeric columns are detected via the
+    // 'num' class on the <th>.
+    function makeSortable(root) {
+      var tables = root.querySelectorAll('table[data-sortable]');
+      tables.forEach(function(table) {
+        var headers = table.querySelectorAll('thead th[data-sort-key]');
+        var tbody = table.querySelector('tbody');
+        headers.forEach(function(th, idx) {
+          th.addEventListener('click', function() {
+            var asc = th.hasAttribute('data-sort-desc') ||
+                      (!th.hasAttribute('data-sort-asc') && !th.hasAttribute('data-sort-desc'));
+            headers.forEach(function(h) {
+              h.removeAttribute('data-sort-asc');
+              h.removeAttribute('data-sort-desc');
+            });
+            th.setAttribute(asc ? 'data-sort-asc' : 'data-sort-desc', '');
+            var isNum = th.classList.contains('num');
+            var rows = Array.prototype.slice.call(tbody.rows);
+            rows.sort(function(a, b) {
+              var av = a.cells[idx].textContent.trim();
+              var bv = b.cells[idx].textContent.trim();
+              if (isNum) { av = parseFloat(av) || 0; bv = parseFloat(bv) || 0; }
+              if (av < bv) return asc ? -1 : 1;
+              if (av > bv) return asc ? 1 : -1;
+              return 0;
+            });
+            rows.forEach(function(r) { tbody.appendChild(r); });
+          });
+        });
+      });
+    }
+    // Run now for any tables already in the DOM, and again after
+    // htmx swaps results into #results.
+    makeSortable(document);
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+      makeSortable(evt.target);
+    });
+
+    // G1: reconciliation overlay.  Show during /reconcile; hide on response.
+    (function() {
+      var overlay = document.getElementById('reconcile-overlay');
+      var sub = document.getElementById('reconcile-sub');
+      if (!overlay) return;
+      var cycleTimer = null;
+      function startCycle() {
+        var brands = Array.from(document.querySelectorAll('.brand-row'))
+          .filter(function(r) { return !r.classList.contains('hidden'); })
+          .map(function(r) {
+            var input = r.querySelector('input[type=file]');
+            if (!input || !input.files || !input.files.length) return null;
+            return r.querySelector('.brand-label')?.textContent || r.dataset.key;
+          })
+          .filter(Boolean);
+        if (!brands.length) return;
+        var i = 0;
+        sub.textContent = 'Folding ' + brands[0] + ' into the master';
+        cycleTimer = setInterval(function() {
+          i = (i + 1) % brands.length;
+          sub.textContent = 'Folding ' + brands[i] + ' into the master';
+        }, 1800);
+      }
+      function stopCycle() {
+        if (cycleTimer) { clearInterval(cycleTimer); cycleTimer = null; }
+      }
+      document.body.addEventListener('htmx:beforeRequest', function(evt) {
+        if (evt.detail.requestConfig.path === '/reconcile') {
+          overlay.classList.add('visible');
+          overlay.setAttribute('aria-hidden', 'false');
+          startCycle();
+        }
+      });
+      document.body.addEventListener('htmx:afterRequest', function(evt) {
+        if (evt.detail.requestConfig.path === '/reconcile') {
+          overlay.classList.remove('visible');
+          overlay.setAttribute('aria-hidden', 'true');
+          stopCycle();
+        }
+      });
+      document.body.addEventListener('htmx:responseError', function(evt) {
+        overlay.classList.remove('visible');
+        overlay.setAttribute('aria-hidden', 'true');
+        stopCycle();
+      });
+    })();
+  </script>
+</body>
+</html>

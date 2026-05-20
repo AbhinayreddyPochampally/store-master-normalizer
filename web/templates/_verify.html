@@ -1,0 +1,51 @@
+<article class="verify-card {% if v.passed %}verify-pass{% else %}verify-fail{% endif %}">
+  <header>
+    <h2>Verification: <span class="verdict">{{ v.verdict }}</span></h2>
+    <p class="subtitle">
+      Brand: {{ v.brand }}
+      &middot; Rows checked: {{ v.rows_checked }} (scope: {{ v.scope_rows }}, passthrough: {{ v.passthrough_rows }})
+      &middot; Cells: {{ v.cells_checked }}
+    </p>
+  </header>
+
+  {% if not v.passed %}
+    <section>
+      <h3>Mismatches by rule type</h3>
+      <table class="topfields"><thead><tr><th>Rule type</th><th>Count</th></tr></thead>
+        <tbody>{% for k, n in by_rule_type %}<tr><td>{{ k }}</td><td>{{ n }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </section>
+    <section>
+      <h3>Mismatches by row type</h3>
+      <table class="topfields"><thead><tr><th>Row type</th><th>Count</th></tr></thead>
+        <tbody>{% for k, n in by_row_type %}<tr><td>{{ k }}</td><td>{{ n }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </section>
+    <section>
+      <h3>Mismatches by field (top 10)</h3>
+      <table class="topfields"><thead><tr><th>Field</th><th>Count</th></tr></thead>
+        <tbody>{% for k, n in by_field %}<tr><td>{{ k }}</td><td>{{ n }}</td></tr>{% endfor %}</tbody>
+      </table>
+    </section>
+    <details>
+      <summary>Detail ({{ v.mismatches | length }} mismatches; showing up to 100)</summary>
+      <table class="mismatch-detail">
+        <thead><tr><th>Row type</th><th>Store Id</th><th>Field</th><th>Rule</th><th>Expected</th><th>Actual</th></tr></thead>
+        <tbody>
+          {% for m in v.mismatches[:100] %}
+            <tr>
+              <td>{{ m.row_type }}</td>
+              <td>{{ m.store_id }}</td>
+              <td>{{ m.field }}</td>
+              <td>{{ m.rule_type }}</td>
+              <td><code>{{ m.expected_repr }}</code></td>
+              <td><code>{{ m.actual_repr }}</code></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </details>
+  {% else %}
+    <p class="all-good">All scope cells match the rules &mdash; engine output is consistent.</p>
+  {% endif %}
+</article>

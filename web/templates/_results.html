@@ -1,0 +1,99 @@
+{% set max_count = r.top_fields[0][1] if r.top_fields else 1 %}
+<article class="card results-card">
+  <header class="card-header">
+    <h2>{{ r.brand_label }}</h2>
+    <p class="meta">
+      {{ r.source_total }} source rows
+      &middot; sheet: <code>{{ r.sheet_used }}</code>
+    </p>
+  </header>
+
+  <h3>Counts</h3>
+  <div class="tiles">
+    <div class="tile tile-new {{ 'zero' if r.summary.NEW == 0 else '' }}">
+      <div class="tile-label">New</div>
+      <div class="tile-value">{{ r.summary.NEW }}</div>
+    </div>
+    <div class="tile tile-updated {{ 'zero' if r.summary.UPDATED == 0 else '' }}">
+      <div class="tile-label">Updated</div>
+      <div class="tile-value">{{ r.summary.UPDATED }}</div>
+    </div>
+    <div class="tile tile-code {{ 'zero' if (r.summary.CODE_CHANGED or 0) == 0 else '' }}">
+      <div class="tile-label">Code Changed</div>
+      <div class="tile-value">{{ r.summary.CODE_CHANGED or 0 }}</div>
+    </div>
+    <div class="tile tile-closed {{ 'zero' if r.summary.CLOSED == 0 else '' }}">
+      <div class="tile-label">Closed</div>
+      <div class="tile-value">{{ r.summary.CLOSED }}</div>
+    </div>
+    <div class="tile tile-warn {{ 'zero' if r.warnings|length == 0 else '' }}">
+      <div class="tile-label">Warnings</div>
+      <div class="tile-value">{{ r.warnings|length }}</div>
+    </div>
+  </div>
+
+  {% if r.top_fields %}
+  {# v0.4.1 C3: sortable table replaces the unlabelled bar chart.
+     Columns: Field | Changes | Sample change. #}
+  <h3>Top fields by change count</h3>
+  <table class="top-fields-table" data-sortable>
+    <thead>
+      <tr>
+        <th data-sort-key="field">Field</th>
+        <th data-sort-key="count" class="num">Changes</th>
+        <th data-sort-key="sample">Sample change</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for field, count, sample in r.top_fields %}
+        <tr>
+          <td><strong>{{ field }}</strong></td>
+          <td class="num">{{ count }}</td>
+          <td class="sample">{{ sample }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if r.warnings %}
+  {# v0.4.1 C4: warnings render as expandable rows.  A warning whose
+     text contains a newline is collapsed to its first line; click to
+     expand the indented detail.  Single-line warnings render as-is. #}
+  <h3>Warnings ({{ r.warnings|length }})</h3>
+  <div class="warnings-section">
+    {% for w in r.warnings[:25] %}
+      {% set lines = w.split('\n') %}
+      {% if lines|length > 1 %}
+        <details class="warning-item">
+          <summary>{{ lines[0] }}</summary>
+          <div class="warning-detail">{% for ln in lines[1:] %}{{ ln }}
+{% endfor %}</div>
+        </details>
+      {% else %}
+        <div class="warning-item flat">{{ w }}</div>
+      {% endif %}
+    {% endfor %}
+    {% if r.warnings|length > 25 %}
+      <div class="warning-item more">&hellip; and {{ r.warnings|length - 25 }} more (in the Change Report).</div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="actions-row">
+    <a class="btn btn-secondary" href="/download/{{ r.updated_file }}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Updated Master
+    </a>
+    <a class="btn btn-secondary" href="/download/{{ r.report_file }}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Change Report
+    </a>
+    <form class="verify-form" hx-post="/verify" hx-target="#verify-slot" hx-indicator="#verify-spinner">
+      <input type="hidden" name="run_id" value="{{ r.run_id }}" />
+      <button type="submit" class="btn btn-tertiary">Verify output</button>
+      <span id="verify-spinner" class="verify-spinner htmx-indicator" aria-hidden="true"></span>
+    </form>
+  </div>
+</article>
+<div id="verify-slot" aria-live="polite"></div>

@@ -1,0 +1,215 @@
+{# v0.4.1 G2 redesign: payoff page.
+   Header strip → consolidated-master hero → change reports grid →
+   aggregate strip → collapsible per-brand drill-downs. #}
+<section class="multi-results">
+
+  {# ---- Reconciliation-complete header strip ---- #}
+  <div class="results-header">
+    <span class="results-header-ico" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+        <polyline points="22 4 12 14.01 9 11.01"/>
+      </svg>
+    </span>
+    <div>
+      <div class="results-header-title">Reconciliation complete</div>
+      <div class="results-header-sub">
+        {{ brand_results|length }} brand{% if brand_results|length != 1 %}s{% endif %} folded into the {{ month or 'current' }} master
+      </div>
+    </div>
+  </div>
+
+  {# ---- Consolidated master hero ---- #}
+  {% if consolidated_file %}
+  <article class="card consolidated-hero">
+    <div class="ch-file-tile" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <path d="M14 2v6h6"/>
+        <line x1="9" y1="13" x2="15" y2="13"/>
+        <line x1="9" y1="17" x2="15" y2="17"/>
+      </svg>
+    </div>
+    <div class="ch-meta">
+      <h2 class="ch-title">Consolidated master &middot; {{ month or 'May-2026' }}</h2>
+      <div class="ch-sub">
+        <code>{{ consolidated_file }}</code> &middot; all {{ brand_results|length }} brand{% if brand_results|length != 1 %}s{% endif %} folded in
+      </div>
+    </div>
+    <div class="ch-actions">
+      <a class="btn btn-primary" href="/download/{{ consolidated_run_id }}/{{ consolidated_file }}">
+        <span class="ico-inline" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+        </span>
+        Download
+      </a>
+    </div>
+  </article>
+  {% endif %}
+
+  {# ---- Change reports grid: one receipt card per brand ---- #}
+  <h3 class="section-eyebrow">Change reports &middot; one per brand</h3>
+  <div class="reports-grid">
+    {% for r in brand_results %}
+      <article class="report-card">
+        <div class="report-card-head">
+          <span class="brand-avatar brand-avatar-{{ r.brand_key|lower }}" aria-hidden="true">
+            {% if r.brand_key == "PF" %}PF{% elif r.brand_key == "TCNS" %}TCNS{% else %}{{ r.brand_label[:1]|upper }}{% endif %}
+          </span>
+          <span class="report-brand-label">{{ r.brand_label }}</span>
+          <span class="report-stat">
+            {{ (r.summary.UPDATED or 0) + (r.summary.NEW or 0) + (r.summary.REACTIVATED or 0) + (r.summary.CODE_CHANGED or 0) }} changes
+          </span>
+        </div>
+        <a class="btn btn-secondary report-card-cta" href="/download/{{ consolidated_run_id }}/{{ r.report_file }}">
+          <span class="ico-inline" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </span>
+          Download change report
+        </a>
+      </article>
+    {% endfor %}
+  </div>
+
+  {# ---- Aggregate strip ---- #}
+  <h3 class="section-eyebrow">Across all brands</h3>
+  <div class="aggregate-strip">
+    <div class="aggregate-stat">
+      <div class="agg-value">{{ aggregate.source_rows }}</div>
+      <div class="agg-label">stores in source</div>
+    </div>
+    <div class="aggregate-stat">
+      <div class="agg-value">{{ aggregate.master_in_scope }}</div>
+      <div class="agg-label">stores in master</div>
+    </div>
+    <div class="aggregate-stat">
+      <div class="agg-value">{{ aggregate.new }}</div>
+      <div class="agg-label">new stores</div>
+    </div>
+    <div class="aggregate-stat">
+      <div class="agg-value">{{ aggregate.closed }}</div>
+      <div class="agg-label">missing from source</div>
+    </div>
+    <div class="aggregate-stat">
+      <div class="agg-value">{{ aggregate.fields_changed }}</div>
+      <div class="agg-label">fields changed</div>
+    </div>
+  </div>
+
+  {# ---- Per-brand drill-downs (collapsed by default) ---- #}
+  <article class="card brand-drilldown">
+    <div class="card-title">
+      <div class="ico ico-accent" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </div>
+      <h2>Per-brand details</h2>
+      <span class="meta-inline">Click any row to drill in</span>
+    </div>
+
+    {% for r in brand_results %}
+    <details class="drilldown-row {{ 'has-warnings' if r.warnings|length else '' }}">
+      <summary class="drilldown-summary">
+        <span class="brand-avatar brand-avatar-{{ r.brand_key|lower }}" aria-hidden="true">
+          {% if r.brand_key == "PF" %}PF{% elif r.brand_key == "TCNS" %}TCNS{% else %}{{ r.brand_label[:1]|upper }}{% endif %}
+        </span>
+        <span class="drilldown-brand">{{ r.brand_label }}</span>
+        <span class="brand-mini-tiles">
+          <span class="brand-mini-chip {{ 'zero' if r.summary.NEW == 0 else '' }}"><b>{{ r.summary.NEW }}</b> new</span>
+          <span class="brand-mini-chip {{ 'zero' if r.summary.UPDATED == 0 else '' }}"><b>{{ r.summary.UPDATED }}</b> updated</span>
+          <span class="brand-mini-chip {{ 'zero' if (r.summary.REACTIVATED or 0) == 0 else '' }}"><b>{{ r.summary.REACTIVATED or 0 }}</b> reactivated</span>
+          <span class="brand-mini-chip {{ 'zero' if (r.summary.CODE_CHANGED or 0) == 0 else '' }}"><b>{{ r.summary.CODE_CHANGED or 0 }}</b> migrated</span>
+          <span class="brand-mini-chip {{ 'zero' if r.summary.CLOSED == 0 else '' }}"><b>{{ r.summary.CLOSED }}</b> closed</span>
+          <span class="brand-mini-chip {{ 'warn' if r.warnings|length else 'zero' }}"><b>{{ r.warnings|length }}</b> warnings</span>
+        </span>
+        <span class="drilldown-chevron" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </span>
+      </summary>
+
+      <div class="drilldown-body">
+        <div class="drilldown-meta">
+          {{ r.source_total }} source rows &middot; sheet <code>{{ r.sheet_used }}</code>
+        </div>
+
+        {% if r.top_fields %}
+          <h4 class="section-h" style="margin-top: 14px">Top fields by change count</h4>
+          <table class="top-fields-table" data-sortable>
+            <thead>
+              <tr>
+                <th data-sort-key="field">Field</th>
+                <th data-sort-key="count" class="num">Changes</th>
+                <th data-sort-key="sample">Sample change</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for field, count, sample in r.top_fields %}
+                <tr>
+                  <td><strong>{{ field }}</strong></td>
+                  <td class="num">{{ count }}</td>
+                  <td class="sample">{{ sample }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+
+        {% if r.warnings %}
+          <h4 class="section-h" style="margin-top: 14px">Warnings ({{ r.warnings|length }})</h4>
+          <div class="warnings-section">
+            {% for w in r.warnings[:15] %}
+              {% set lines = w.split('\n') %}
+              {% if lines|length > 1 %}
+                <details class="warning-item">
+                  <summary>{{ lines[0] }}</summary>
+                  <div class="warning-detail">{% for ln in lines[1:] %}{{ ln }}
+{% endfor %}</div>
+                </details>
+              {% else %}
+                <div class="warning-item flat">{{ w }}</div>
+              {% endif %}
+            {% endfor %}
+            {% if r.warnings|length > 15 %}
+              <div class="warning-item more">&hellip; and {{ r.warnings|length - 15 }} more (in the Change Report).</div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <div class="actions-row">
+          <form class="verify-form" hx-post="/verify" hx-target="#verify-{{ r.run_id }}" hx-indicator="#verify-spin-{{ r.run_id }}">
+            <input type="hidden" name="run_id" value="{{ r.run_id }}" />
+            <button type="submit" class="btn btn-tertiary">Verify output</button>
+            <span id="verify-spin-{{ r.run_id }}" class="verify-spinner htmx-indicator" aria-hidden="true"></span>
+          </form>
+        </div>
+        <div id="verify-{{ r.run_id }}" aria-live="polite"></div>
+      </div>
+    </details>
+    {% endfor %}
+  </article>
+
+</section>

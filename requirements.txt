@@ -1,0 +1,22 @@
+# Production runtime for the Store Master Normalizer.
+# Pinned to the versions verified end-to-end against all four brands.
+
+# Web stack
+fastapi==0.136.1
+starlette==1.0.0
+uvicorn==0.46.0
+jinja2>=3.1.6,<4.0     # 3.1+ required for the new TemplateResponse signature
+MarkupSafe==2.1.5
+python-multipart==0.0.28
+
+# Spreadsheet I/O
+openpyxl==3.1.5
+pyxlsb==1.0.10
+et-xmlfile==1.1.0       # openpyxl dependency
+
+# HTTP transport (Starlette / FastAPI deps)
+anyio==4.13.0
+sniffio==1.3.1
+h11==0.16.0
+idna==3.11
+click==8.3.1

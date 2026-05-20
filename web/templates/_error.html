@@ -1,0 +1,11 @@
+<article class="error-card">
+  <h2>Something went wrong</h2>
+  <p class="msg">{{ message }}</p>
+  {% if trace %}
+    <details>
+      <summary>Traceback</summary>
+      <pre>{{ trace }}</pre>
+    </details>
+  {% endif %}
+  <p><a href="/" class="retry">&larr; Try again</a></p>
+</article>

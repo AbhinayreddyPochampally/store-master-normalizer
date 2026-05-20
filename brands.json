@@ -1,0 +1,1125 @@
+{
+  "_backend": {
+    "label": "Backend Master",
+    "default_sheet": "Backend Updated Data",
+    "_notes": "v0.5.2: top-level non-brand block. The UI offers this default as a placeholder for the Backend Master sheet picker; user input on the form overrides it. Keys prefixed with underscore are ignored by load_brands()."
+  },
+  "Pantaloons": {
+    "label": "Pantaloons",
+    "scope_column": "brand",
+    "scope_value": "Pantaloons",
+    "default_sheet": "Sheet1",
+    "header_row": 1,
+    "sheet_overridable": true,
+    "mapping": [
+      {
+        "target": "ID",
+        "source_type": "ENGINE_PRESERVE",
+        "source_value": null,
+        "transform": "",
+        "notes": "SharePoint list ID. Engine never writes; blank on NEW rows."
+      },
+      {
+        "target": "Store Id",
+        "source_type": "COLUMN",
+        "source_value": "Site Code",
+        "transform": ""
+      },
+      {
+        "target": "Store Name",
+        "source_type": "COLUMN",
+        "source_value": "Site Name",
+        "transform": ""
+      },
+      {
+        "target": "Retek Code",
+        "source_type": "COLUMN",
+        "source_value": "Site Code",
+        "transform": ""
+      },
+      {
+        "target": "Legacy Code",
+        "source_type": "COLUMN",
+        "source_value": "Site Code",
+        "transform": ""
+      },
+      {
+        "target": "Organization",
+        "source_type": "CONSTANT",
+        "source_value": "PFRL",
+        "transform": ""
+      },
+      {
+        "target": "MainOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "ABFRL",
+        "transform": ""
+      },
+      {
+        "target": "SubOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "PFRL",
+        "transform": ""
+      },
+      {
+        "target": "Facility Name",
+        "source_type": "CONSTANT",
+        "source_value": "Pantaloons",
+        "transform": ""
+      },
+      {
+        "target": "NewFacilityName",
+        "source_type": "CONSTANT",
+        "source_value": "Pantaloons",
+        "transform": ""
+      },
+      {
+        "target": "NewSubBrand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "brand",
+        "source_type": "CONSTANT",
+        "source_value": "Pantaloons",
+        "transform": ""
+      },
+      {
+        "target": "Sub-brand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Facility Type",
+        "source_type": "CONSTANT",
+        "source_value": "Retail",
+        "transform": ""
+      },
+      {
+        "target": "Brand2",
+        "source_type": "CONSTANT",
+        "source_value": "Pantaloons",
+        "transform": ""
+      },
+      {
+        "target": "Business",
+        "source_type": "CONSTANT",
+        "source_value": "Pantaloons",
+        "transform": ""
+      },
+      {
+        "target": "Region",
+        "source_type": "COLUMN",
+        "source_value": "Zone",
+        "transform": "upper"
+      },
+      {
+        "target": "Store Type",
+        "source_type": "COLUMN",
+        "source_value": "COCO/COFO",
+        "transform": ""
+      },
+      {
+        "target": "Store Main type",
+        "source_type": "COLUMN",
+        "source_value": "COCO/COFO",
+        "transform": ""
+      },
+      {
+        "target": "Store Subtype",
+        "source_type": "COLUMN",
+        "source_value": "COCO/COFO",
+        "transform": ""
+      },
+      {
+        "target": "Store Zone",
+        "source_type": "DERIVED",
+        "source_value": "ZONE_FROM_REGION",
+        "transform": ""
+      },
+      {
+        "target": "Store City",
+        "source_type": "COLUMN",
+        "source_value": "City",
+        "transform": ""
+      },
+      {
+        "target": "State",
+        "source_type": "COLUMN",
+        "source_value": "State",
+        "transform": ""
+      },
+      {
+        "target": "Address",
+        "source_type": "COLUMN",
+        "source_value": "Store Address",
+        "transform": ""
+      },
+      {
+        "target": "Pincode",
+        "source_type": "COLUMN",
+        "source_value": "Pin Code",
+        "transform": ""
+      },
+      {
+        "target": "Location",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": "",
+        "notes": "v0.4.1 A4: Pantaloons source has no separate locality column; leave Location blank on refresh rather than duplicating Store Name. Pending Nivethitha confirmation (design doc Section 11.4)."
+      },
+      {
+        "target": "Located",
+        "source_type": "COLUMN",
+        "source_value": "TYPE",
+        "transform": ""
+      },
+      {
+        "target": "Square feet",
+        "source_type": "COLUMN",
+        "source_value": "Chargeable Area (SqFt)",
+        "transform": ""
+      },
+      {
+        "target": "Carpet",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Store Opening Date",
+        "source_type": "COLUMN",
+        "source_value": "Store Opening date",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "SM's Name",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager No",
+        "source_type": "COLUMN",
+        "source_value": "SM's Contact No",
+        "transform": ""
+      },
+      {
+        "target": "Store Email Id",
+        "source_type": "COLUMN",
+        "source_value": "Email ID",
+        "transform": ""
+      },
+      {
+        "target": "Area Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "RSM's",
+        "transform": ""
+      },
+      {
+        "target": "ARM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "RSM's Contact No",
+        "transform": ""
+      },
+      {
+        "target": "ARM E mail",
+        "source_type": "COLUMN",
+        "source_value": "RSM's Email ID",
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "Zonal Sales Head",
+        "transform": ""
+      },
+      {
+        "target": "RM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "ZSH Contact No.",
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager E-mail Id",
+        "source_type": "COLUMN",
+        "source_value": "ZSH's Email",
+        "transform": ""
+      },
+      {
+        "target": "Isactive",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Dailychecklist access",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Old Sapcode",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Remarks",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Title",
+        "source_type": "DERIVED",
+        "source_value": "TITLE_FROM_STORE_ID",
+        "transform": "",
+        "notes": "Mirror of Store Id on every engine-written row."
+      }
+    ],
+    "divergence_warnings": []
+  },
+  "PF": {
+    "label": "Planet Fashion",
+    "scope_column": "brand",
+    "scope_value": "PF",
+    "default_sheet": "PF Active Stores",
+    "header_row": 2,
+    "sheet_overridable": true,
+    "mapping": [
+      {
+        "target": "ID",
+        "source_type": "ENGINE_PRESERVE",
+        "source_value": null,
+        "transform": "",
+        "notes": "SharePoint list ID. Engine never writes; blank on NEW rows."
+      },
+      {
+        "target": "Store Id",
+        "source_type": "COLUMN",
+        "source_value": "Active SAP",
+        "transform": ""
+      },
+      {
+        "target": "Store Name",
+        "source_type": "COLUMN",
+        "source_value": "Active SAP",
+        "transform": ""
+      },
+      {
+        "target": "Retek Code",
+        "source_type": "COLUMN",
+        "source_value": "SHRM 2",
+        "transform": ""
+      },
+      {
+        "target": "Legacy Code",
+        "source_type": "COLUMN",
+        "source_value": "ASP Code",
+        "transform": ""
+      },
+      {
+        "target": "Organization",
+        "source_type": "CONSTANT",
+        "source_value": "MFL Lifestyle",
+        "transform": ""
+      },
+      {
+        "target": "MainOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "ABLBL",
+        "transform": ""
+      },
+      {
+        "target": "SubOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "Lifestyle Brands",
+        "transform": ""
+      },
+      {
+        "target": "Facility Name",
+        "source_type": "CONSTANT",
+        "source_value": "Planet Fashion",
+        "transform": ""
+      },
+      {
+        "target": "NewFacilityName",
+        "source_type": "CONSTANT",
+        "source_value": "Planet Fashion",
+        "transform": ""
+      },
+      {
+        "target": "NewSubBrand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "brand",
+        "source_type": "CONSTANT",
+        "source_value": "PF",
+        "transform": ""
+      },
+      {
+        "target": "Sub-brand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Facility Type",
+        "source_type": "CONSTANT",
+        "source_value": "Retail",
+        "transform": ""
+      },
+      {
+        "target": "Brand2",
+        "source_type": "CONSTANT",
+        "source_value": "Planet Fashion",
+        "transform": ""
+      },
+      {
+        "target": "Business",
+        "source_type": "CONSTANT",
+        "source_value": "LBRD",
+        "transform": ""
+      },
+      {
+        "target": "Region",
+        "source_type": "COLUMN",
+        "source_value": "REGION",
+        "transform": "upper"
+      },
+      {
+        "target": "Store Type",
+        "source_type": "COLUMN",
+        "source_value": "Model",
+        "transform": ""
+      },
+      {
+        "target": "Store Main type",
+        "source_type": "COLUMN",
+        "source_value": "Model",
+        "transform": ""
+      },
+      {
+        "target": "Store Subtype",
+        "source_type": "COLUMN",
+        "source_value": "Model",
+        "transform": ""
+      },
+      {
+        "target": "Store Zone",
+        "source_type": "DERIVED",
+        "source_value": "ZONE_FROM_REGION",
+        "transform": ""
+      },
+      {
+        "target": "Store City",
+        "source_type": "COLUMN",
+        "source_value": "CITY",
+        "transform": ""
+      },
+      {
+        "target": "State",
+        "source_type": "COLUMN",
+        "source_value": "State",
+        "transform": ""
+      },
+      {
+        "target": "Address",
+        "source_type": "COLUMN",
+        "source_value": "ADDRESS",
+        "transform": ""
+      },
+      {
+        "target": "Pincode",
+        "source_type": "COLUMN",
+        "source_value": "PIN CODE",
+        "transform": ""
+      },
+      {
+        "target": "Location",
+        "source_type": "COLUMN",
+        "source_value": "Location",
+        "transform": ""
+      },
+      {
+        "target": "Located",
+        "source_type": "COLUMN",
+        "source_value": "Located @",
+        "transform": ""
+      },
+      {
+        "target": "Square feet",
+        "source_type": "COLUMN",
+        "source_value": "Area",
+        "transform": ""
+      },
+      {
+        "target": "Carpet",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Store Opening Date",
+        "source_type": "COLUMN",
+        "source_value": "OP DATE",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "Store Manager / Incharge",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager No",
+        "source_type": "COLUMN",
+        "source_value": "Store Manager / Incharge Mob no.",
+        "transform": ""
+      },
+      {
+        "target": "Store Email Id",
+        "source_type": "COLUMN",
+        "source_value": "Store Official E-MAIL",
+        "transform": ""
+      },
+      {
+        "target": "Area Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "New ABM",
+        "transform": ""
+      },
+      {
+        "target": "ARM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "Contact No",
+        "transform": ""
+      },
+      {
+        "target": "ARM E mail",
+        "source_type": "COLUMN",
+        "source_value": "Mail Id",
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "RM",
+        "transform": ""
+      },
+      {
+        "target": "RM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "Contact No",
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager E-mail Id",
+        "source_type": "COLUMN",
+        "source_value": "Mail Id",
+        "transform": ""
+      },
+      {
+        "target": "Isactive",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Dailychecklist access",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Old Sapcode",
+        "source_type": "COLUMN",
+        "source_value": "Old SAP",
+        "transform": ""
+      },
+      {
+        "target": "Remarks",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Title",
+        "source_type": "DERIVED",
+        "source_value": "TITLE_FROM_STORE_ID",
+        "transform": "",
+        "notes": "Mirror of Store Id on every engine-written row."
+      }
+    ],
+    "divergence_warnings": [
+      [
+        1,
+        55
+      ]
+    ]
+  },
+  "Tasva": {
+    "label": "TASVA",
+    "scope_column": "brand",
+    "scope_value": "Tasva",
+    "default_sheet": "Contact Master",
+    "header_row": 2,
+    "sheet_overridable": true,
+    "mapping": [
+      {
+        "target": "ID",
+        "source_type": "ENGINE_PRESERVE",
+        "source_value": null,
+        "transform": "",
+        "notes": "SharePoint list ID. Engine never writes; blank on NEW rows."
+      },
+      {
+        "target": "Store Id",
+        "source_type": "COLUMN",
+        "source_value": "Site Code",
+        "transform": ""
+      },
+      {
+        "target": "Store Name",
+        "source_type": "COLUMN",
+        "source_value": "Store Name",
+        "transform": ""
+      },
+      {
+        "target": "Retek Code",
+        "source_type": "COLUMN",
+        "source_value": "Site Code",
+        "transform": ""
+      },
+      {
+        "target": "Legacy Code",
+        "source_type": "COLUMN",
+        "source_value": "Site Code",
+        "transform": ""
+      },
+      {
+        "target": "Organization",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic Business",
+        "transform": ""
+      },
+      {
+        "target": "MainOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "ABFRL",
+        "transform": ""
+      },
+      {
+        "target": "SubOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic",
+        "transform": ""
+      },
+      {
+        "target": "Facility Name",
+        "source_type": "CONSTANT",
+        "source_value": "Tasva",
+        "transform": ""
+      },
+      {
+        "target": "NewFacilityName",
+        "source_type": "CONSTANT",
+        "source_value": "Tasva",
+        "transform": ""
+      },
+      {
+        "target": "NewSubBrand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "brand",
+        "source_type": "CONSTANT",
+        "source_value": "Tasva",
+        "transform": ""
+      },
+      {
+        "target": "Sub-brand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Facility Type",
+        "source_type": "CONSTANT",
+        "source_value": "Retail",
+        "transform": ""
+      },
+      {
+        "target": "Brand2",
+        "source_type": "CONSTANT",
+        "source_value": "Tasva",
+        "transform": ""
+      },
+      {
+        "target": "Business",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic Business",
+        "transform": "",
+        "notes": "TASVA brand constant (v0.5.1 F2; confirmed by Abhinay)."
+      },
+      {
+        "target": "Region",
+        "source_type": "COLUMN",
+        "source_value": "Region",
+        "transform": "upper"
+      },
+      {
+        "target": "Store Type",
+        "source_type": "COLUMN",
+        "source_value": "Type",
+        "transform": ""
+      },
+      {
+        "target": "Store Main type",
+        "source_type": "COLUMN",
+        "source_value": "Type",
+        "transform": ""
+      },
+      {
+        "target": "Store Subtype",
+        "source_type": "COLUMN",
+        "source_value": "Type",
+        "transform": ""
+      },
+      {
+        "target": "Store Zone",
+        "source_type": "DERIVED",
+        "source_value": "ZONE_FROM_REGION",
+        "transform": ""
+      },
+      {
+        "target": "Store City",
+        "source_type": "COLUMN",
+        "source_value": "City",
+        "transform": ""
+      },
+      {
+        "target": "State",
+        "source_type": "COLUMN",
+        "source_value": "State",
+        "transform": ""
+      },
+      {
+        "target": "Address",
+        "source_type": "COLUMN",
+        "source_value": "Store -Address",
+        "transform": ""
+      },
+      {
+        "target": "Pincode",
+        "source_type": "DERIVED",
+        "source_value": "PINCODE_FROM_ADDRESS",
+        "transform": ""
+      },
+      {
+        "target": "Location",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Located",
+        "source_type": "COLUMN",
+        "source_value": "HS/Mall",
+        "transform": ""
+      },
+      {
+        "target": "Square feet",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Carpet",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Store Opening Date",
+        "source_type": "COLUMN",
+        "source_value": "Store Opening date",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "SGM Name",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager No",
+        "source_type": "COLUMN",
+        "source_value": "SGM Contact No. ",
+        "transform": ""
+      },
+      {
+        "target": "Store Email Id",
+        "source_type": "COLUMN",
+        "source_value": "Store Email ID",
+        "transform": ""
+      },
+      {
+        "target": "Area Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "ARM",
+        "transform": ""
+      },
+      {
+        "target": "ARM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "Contact No",
+        "transform": ""
+      },
+      {
+        "target": "ARM E mail",
+        "source_type": "COLUMN",
+        "source_value": "Email id",
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "RM",
+        "transform": "",
+        "notes": "v0.4.1 B5: TASVA RM block. RM Name is col 7 (H). RM E-mail is col 8 (I) and RM Contact No is col 9 (J), swapped from the original reference per design doc Section 11.1. The adjacency-based duplicate-column resolver picks the nearest 'Email id' / 'Contact No' after the RM anchor automatically -- pending Nivethitha confirmation."
+      },
+      {
+        "target": "RM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "Contact No",
+        "transform": "phoneClean",
+        "notes": "v0.4.1 B5: reads source col 9 (J) via adjacency to RM anchor (Section 11.1)."
+      },
+      {
+        "target": "Regional Manager E-mail Id",
+        "source_type": "COLUMN",
+        "source_value": "Email id",
+        "transform": "lowercase",
+        "notes": "v0.4.1 B5: reads source col 8 (I) via adjacency to RM anchor (Section 11.1)."
+      },
+      {
+        "target": "Isactive",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Dailychecklist access",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Old Sapcode",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Remarks",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Title",
+        "source_type": "DERIVED",
+        "source_value": "TITLE_FROM_STORE_ID",
+        "transform": "",
+        "notes": "Mirror of Store Id on every engine-written row."
+      }
+    ],
+    "divergence_warnings": []
+  },
+  "TCNS": {
+    "label": "TCNS",
+    "scope_column": "Organization",
+    "scope_value": "TCNS",
+    "default_sheet": "Mar",
+    "header_row": 1,
+    "sheet_overridable": true,
+    "mapping": [
+      {
+        "target": "ID",
+        "source_type": "ENGINE_PRESERVE",
+        "source_value": null,
+        "transform": "",
+        "notes": "SharePoint list ID. Engine never writes; blank on NEW rows."
+      },
+      {
+        "target": "Store Id",
+        "source_type": "COLUMN",
+        "source_value": "SAP",
+        "transform": ""
+      },
+      {
+        "target": "Store Name",
+        "source_type": "COLUMN",
+        "source_value": "SAP",
+        "transform": ""
+      },
+      {
+        "target": "Retek Code",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Legacy Code",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Organization",
+        "source_type": "CONSTANT",
+        "source_value": "TCNS",
+        "transform": ""
+      },
+      {
+        "target": "MainOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "ABFRL",
+        "transform": ""
+      },
+      {
+        "target": "SubOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic",
+        "transform": ""
+      },
+      {
+        "target": "Facility Name",
+        "source_type": "CONSTANT",
+        "source_value": "TCNS",
+        "transform": ""
+      },
+      {
+        "target": "NewFacilityName",
+        "source_type": "CONSTANT",
+        "source_value": "TCNS",
+        "transform": ""
+      },
+      {
+        "target": "NewSubBrand",
+        "source_type": "COLUMN",
+        "source_value": "Brand",
+        "transform": ""
+      },
+      {
+        "target": "brand",
+        "source_type": "COLUMN",
+        "source_value": "Brand",
+        "transform": ""
+      },
+      {
+        "target": "Sub-brand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Facility Type",
+        "source_type": "CONSTANT",
+        "source_value": "Retail",
+        "transform": ""
+      },
+      {
+        "target": "Brand2",
+        "source_type": "COLUMN",
+        "source_value": "Brand",
+        "transform": ""
+      },
+      {
+        "target": "Business",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Region",
+        "source_type": "COLUMN",
+        "source_value": "Region",
+        "transform": "upper"
+      },
+      {
+        "target": "Store Type",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Store Main type",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Store Subtype",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Store Zone",
+        "source_type": "DERIVED",
+        "source_value": "ZONE_FROM_REGION",
+        "transform": ""
+      },
+      {
+        "target": "Store City",
+        "source_type": "COLUMN",
+        "source_value": "City",
+        "transform": ""
+      },
+      {
+        "target": "State",
+        "source_type": "COLUMN",
+        "source_value": "State",
+        "transform": ""
+      },
+      {
+        "target": "Address",
+        "source_type": "COLUMN",
+        "source_value": "Store Address",
+        "transform": ""
+      },
+      {
+        "target": "Pincode",
+        "source_type": "COLUMN",
+        "source_value": "Pin",
+        "transform": ""
+      },
+      {
+        "target": "Location",
+        "source_type": "COLUMN",
+        "source_value": "Location",
+        "transform": ""
+      },
+      {
+        "target": "Located",
+        "source_type": "COLUMN",
+        "source_value": "Mall / HS / Airport",
+        "transform": ""
+      },
+      {
+        "target": "Square feet",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Carpet",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Store Opening Date",
+        "source_type": "COLUMN",
+        "source_value": "Store Opening Date / Vintage",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "Store Manager Name",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager No",
+        "source_type": "COLUMN",
+        "source_value": "Store Manager Contact No.",
+        "transform": ""
+      },
+      {
+        "target": "Store Email Id",
+        "source_type": "COLUMN",
+        "source_value": "Store Mail id",
+        "transform": ""
+      },
+      {
+        "target": "Area Manager Name",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "ARM Contact No",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "ARM E mail",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "RM Name",
+        "transform": ""
+      },
+      {
+        "target": "RM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "RM Contact No",
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager E-mail Id",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Isactive",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Dailychecklist access",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Old Sapcode",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Remarks",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Title",
+        "source_type": "DERIVED",
+        "source_value": "TITLE_FROM_STORE_ID",
+        "transform": "",
+        "notes": "Mirror of Store Id on every engine-written row."
+      }
+    ],
+    "divergence_warnings": []
+  }
+}
