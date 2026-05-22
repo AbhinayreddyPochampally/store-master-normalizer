@@ -158,11 +158,26 @@ def _match_key(v: Any):
     return None if c is None else c
 
 
+# Tokens that mean "not active".  The design doc (Section 6 / Data
+# Quality table) says Isactive is stored as canonical upper-case YES / NO,
+# but legacy and source data arrive as several spellings of "no".  We
+# recognise all of them so a deactivate-to-active store is correctly seen
+# as inactive regardless of how the master happened to store the flag.
+_INACTIVE_STR_TOKENS = frozenset({"no", "n", "false", "inactive", "deactivated"})
+
+
 def _is_active(v: Any) -> bool:
     c = _canonical(v)
     if c is None:
         return True   # untyped/blank -> treat as active (legacy data)
-    return c != ("str", "no")
+    kind, val = c
+    if kind == "str":
+        return val not in _INACTIVE_STR_TOKENS
+    if kind == "num":
+        return val != 0          # 0 -> inactive
+    if kind == "bool":
+        return val               # False -> inactive
+    return True
 
 
 # -- v0.5.1 (F1): Isactive / Dailychecklist access pre-run sweep --------
@@ -192,18 +207,37 @@ def apply_isactive_daily_sweep(master_rows: List[Dict[str, Any]],
         # Empty rows are ignored -- they have their own remarks rule.
         if _is_empty(ia_raw) and _is_empty(dc_raw):
             continue
-        ia = str(ia_raw).strip().upper() if isinstance(ia_raw, str) else (
-            "YES" if _is_active(ia_raw) else "NO")
-        dc = str(dc_raw).strip().upper() if isinstance(dc_raw, str) else (
-            "YES" if _is_active(dc_raw) else "NO")
-        if ia != dc:
-            row["Dailychecklist access"] = ia
+        # Canonical YES/NO for the row.  Isactive is the authority; when it
+        # is blank we fall back to Dailychecklist access so a half-populated
+        # legacy row still resolves to one consistent value.
+        if not _is_empty(ia_raw):
+            canon = "YES" if _is_active(ia_raw) else "NO"
+        else:
+            canon = "YES" if _is_active(dc_raw) else "NO"
+
+        # Data Quality table: Isactive is stored as canonical upper-case
+        # YES / NO.  Normalise any legacy spelling ("Inactive", "no", ...)
+        # in place so downstream cascade + reports see the canonical value.
+        if not _is_empty(ia_raw) and str(ia_raw).strip().upper() != canon:
+            row["Isactive"] = canon
+            fixes.append(ChangeRecord(
+                status="FLAG_SWEEP",
+                store_id=row.get("Store Id"),
+                field_changed="Isactive",
+                old_value=ia_raw,
+                new_value=canon,
+                notes="F1 pre-run sweep: normalized Isactive to canonical YES/NO",
+            ))
+
+        # Dailychecklist access must equal Isactive.
+        if not _values_equal(dc_raw, canon):
+            row["Dailychecklist access"] = canon
             fixes.append(ChangeRecord(
                 status="FLAG_SWEEP",
                 store_id=row.get("Store Id"),
                 field_changed="Dailychecklist access",
                 old_value=dc_raw,
-                new_value=ia,
+                new_value=canon,
                 notes="F1 pre-run sweep: forced Daily = Isactive",
             ))
     if fixes:
@@ -523,9 +557,33 @@ def reconcile(*, rules, mapped_rows, master_rows, master_field_order,
                 changes.extend(row_changes)
             continue
 
-        # -- Step 2: Old Sapcode token match (Migrated) --
+        # -- Step 2: Migrated --
+        # Two ways a migration is detected for the same brand:
+        #   (a) the source's (new) Store Id already appears in some master
+        #       row's accumulated Old Sapcode list, or
+        #   (b) the source row carries the previous code in its own
+        #       Old Sapcode field (e.g. PF's "Old SAP" column) and that
+        #       code matches an existing master Store Id / Legacy / Retek.
+        # Case (b) is the "11002 -> 67890" rename: the new code is unknown
+        # to the master, so without it the row would wrongly fall through
+        # to Step 4 (New) and the old row would be left to be inactivated.
+        migrated_idx: Optional[int] = None
         if sid is not None and sid in by_old_sapcode:
-            master_idx = by_old_sapcode[sid]
+            migrated_idx = by_old_sapcode[sid]
+        else:
+            for tok in _split_old_sapcode(mapped.get("Old Sapcode")):
+                k = _match_key(tok)
+                if k is None:
+                    continue
+                if k in by_id:
+                    migrated_idx = by_id[k]; break
+                if k in by_legacy:
+                    migrated_idx = by_legacy[k]; break
+                if k in by_retek:
+                    migrated_idx = by_retek[k]; break
+
+        if migrated_idx is not None:
+            master_idx = migrated_idx
             master_row = output_rows[master_idx]
             old_store_id = master_row.get("Store Id")
             was_inactive = not _is_active(master_row.get("Isactive"))
