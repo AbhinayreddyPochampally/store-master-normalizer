@@ -49,6 +49,7 @@ from engine.cli import (                                  # noqa: E402
     _format_month_label,
 )
 from engine.reconciler import apply_inactivation_pass     # noqa: E402
+from engine.reconciler import apply_status_columns        # noqa: E402
 from engine.verifier import verify_conversion             # noqa: E402
 
 from engine.brands import load_brands, load_backend_config  # noqa: E402
@@ -189,6 +190,11 @@ def _run_engine(*, source_path: Path, master_path: Path, brand_key: str,
         month_label=month_label,
     )
     warnings.extend(result.warnings)
+
+    # Engine-derived status columns (Data Modified / Deactivated / Reactivated).
+    apply_status_columns(result, master_field_order,
+                         scope_column=cfg["scope_column"],
+                         scope_value=cfg["scope_value"])
 
     # v0.4.1 A5: filename = "<Brand>_Updated_Master_<Month-YYYY>.xlsx",
     # no random hash.  The web layer may serve concurrent runs, so to
@@ -668,6 +674,10 @@ async def reconcile_route(request: Request):
                 month_label=month_label,
             )
             per_brand_warnings.extend(result.warnings)
+            # Engine-derived status columns for this brand's rows.
+            apply_status_columns(result, master_field_order,
+                                 scope_column=cfg["scope_column"],
+                                 scope_value=cfg["scope_value"])
             master_rows = result.updated_master   # thread forward
         except Exception as exc:
             tb = traceback.format_exc(limit=4)

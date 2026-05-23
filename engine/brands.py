@@ -54,7 +54,20 @@ MASTER_FIELDS: List[str] = [
     "Isactive", "Dailychecklist access", "Old Sapcode", "Remarks",
     # Position 44: Title -- mirror of Store Id on every engine-written row.
     "Title",
+    # Positions 45-47: engine-derived run-status columns (added per the
+    # operator's "3 new columns" request).  Not source-mapped; computed by
+    # engine.reconciler.apply_status_columns after the cascade + inactivation
+    # pass run.
+    #   Data Modified       -- "New" / "Yes" / "No" for this run's outcome.
+    #   Deactivated Stores  -- standing: "YES" while the store is inactive.
+    #   Reactivated Stores  -- standing: "YES" after a reopen, until changed.
+    "Data Modified", "Deactivated Stores", "Reactivated Stores",
 ]
+
+# Engine-derived run-status columns (not present in source files; the engine
+# computes and appends these to the output).  Kept as a named tuple so the
+# reconciler and writers agree on names and order.
+STATUS_COLUMNS = ("Data Modified", "Deactivated Stores", "Reactivated Stores")
 
 VALID_SOURCE_TYPES = {
     "COLUMN", "CONSTANT", "EMPTY", "DERIVED", "PRESERVE_FROM_MASTER",

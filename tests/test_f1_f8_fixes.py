@@ -101,9 +101,12 @@ class F6IdPreserveTests(unittest.TestCase):
 
     def test_master_fields_has_id_at_pos_1(self):
         from engine.brands import MASTER_FIELDS
-        self.assertEqual(len(MASTER_FIELDS), 44)
+        # 44 core columns + 3 engine-derived status columns (45-47).
+        self.assertEqual(len(MASTER_FIELDS), 47)
         self.assertEqual(MASTER_FIELDS[0], "ID")
-        self.assertEqual(MASTER_FIELDS[-1], "Title")
+        self.assertEqual(MASTER_FIELDS[43], "Title")
+        self.assertEqual(MASTER_FIELDS[-3:],
+                         ["Data Modified", "Deactivated Stores", "Reactivated Stores"])
 
     def test_engine_preserve_in_valid_source_types(self):
         from engine.brands import VALID_SOURCE_TYPES

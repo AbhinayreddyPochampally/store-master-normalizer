@@ -89,6 +89,10 @@ class ReconcileResult:
     orphan_source_count: int = 0
     matched_master_rows: set = field(default_factory=set)
     in_scope_indices: List[int] = field(default_factory=list)
+    # index -> {'new','changed','reactivated','deactivated': bool} describing
+    # what happened to that output row THIS run.  Consumed by
+    # apply_status_columns to fill the 3 engine-derived status columns.
+    row_run_status: Dict[int, Dict[str, bool]] = field(default_factory=dict)
 
 
 # -- canonicaliser -------------------------------------------------------
@@ -460,6 +464,10 @@ def reconcile(*, rules, mapped_rows, master_rows, master_field_order,
 
     changes: List[ChangeRecord] = list(_pre_changes)
     warnings: List[str] = list(_sweep_warnings)
+    # Per-row record of what happened this run (index -> flags).  Filled by
+    # the cascade below and by apply_inactivation_pass; read by
+    # apply_status_columns to derive the 3 status columns.
+    row_run_status: Dict[int, Dict[str, bool]] = {}
     summary = {"NEW": 0, "UPDATED": 0, "CLOSED": 0,
                "ORPHAN": 0, "CODE_CHANGED": 0,
                "REACTIVATED": 0, "INACTIVATED_BAD_EMAIL": 0,
@@ -552,9 +560,14 @@ def reconcile(*, rules, mapped_rows, master_rows, master_field_order,
                     ))
                 summary["REACTIVATED"] += 1
                 changes.extend(row_changes)
+                row_run_status[master_idx] = {"changed": True, "reactivated": True}
             elif row_changes:
                 summary["UPDATED"] += 1
                 changes.extend(row_changes)
+                row_run_status[master_idx] = {"changed": True}
+            else:
+                # Active refresh that touched no fields -> no data change.
+                row_run_status[master_idx] = {"changed": False}
             continue
 
         # -- Step 2: Migrated --
@@ -640,6 +653,10 @@ def reconcile(*, rules, mapped_rows, master_rows, master_field_order,
                 ))
             summary["CODE_CHANGED"] += 1
             changes.extend(row_changes)
+            # A migration from an inactive row counts as a reactivation for
+            # the standing Reactivated flag (the store has reopened).
+            row_run_status[master_idx] = {"changed": True,
+                                          "reactivated": bool(was_inactive)}
             continue
 
         # -- ORPHAN: cross-brand collision --
@@ -715,12 +732,14 @@ def reconcile(*, rules, mapped_rows, master_rows, master_field_order,
             notes="new-store remark",
         ))
         output_rows.append(new_row)
+        row_run_status[len(output_rows) - 1] = {"new": True, "changed": True}
 
     return ReconcileResult(
         updated_master=output_rows,
         changes=changes,
         summary=summary,
         warnings=warnings,
+        row_run_status=row_run_status,
         matched_source_count=matched_source,
         unmatched_source_count=unmatched_source,
         orphan_source_count=orphan_source,
@@ -797,6 +816,7 @@ def apply_inactivation_pass(*, result, brand_label,
         _mirror_title(master_row)
 
         result.summary["CLOSED"] += 1
+        result.row_run_status[idx] = {"changed": True, "deactivated": True}
         result.changes.append(ChangeRecord(
             status="CLOSED", store_id=sid,
             field_changed="Isactive",
@@ -838,6 +858,12 @@ def apply_inactivation_pass(*, result, brand_label,
         _mirror_title(master_row)
 
         result.summary["INACTIVATED_BAD_EMAIL"] += 1
+        # Merge with any prior status this run (e.g. a row refreshed then
+        # inactivated for a bad email): deactivation is the final outcome.
+        _st = result.row_run_status.setdefault(idx, {})
+        _st["changed"] = True
+        _st["deactivated"] = True
+        _st["reactivated"] = False
         result.changes.append(ChangeRecord(
             status="INACTIVATED_BAD_EMAIL", store_id=sid,
             field_changed="Isactive",
@@ -858,3 +884,62 @@ def apply_inactivation_pass(*, result, brand_label,
                 old_value=old_remark, new_value=new_remark,
                 notes="bad-email remark",
             ))
+
+
+# -- Section 7: engine-derived status columns --------------------------
+
+def apply_status_columns(result, master_field_order, scope_column=None,
+                         scope_value=None):
+    """Fill the three engine-derived status columns on this run's rows.
+
+    Must run AFTER :func:`reconcile` and :func:`apply_inactivation_pass`,
+    when each row's final ``Isactive`` and this run's event flags are known.
+    Appends the column names to ``master_field_order`` (in place) if missing
+    so the writer emits them.
+
+    Column semantics (operator decision -- standing state for the two
+    YES/NO flags, per-run for Data Modified):
+
+      * ``Data Modified``      -- ``"New"`` for stores created this run,
+        ``"Yes"`` when any field changed this run, ``"No"`` otherwise.
+      * ``Deactivated Stores`` -- ``"YES"`` while the row is currently
+        inactive, ``"NO"`` while active.
+      * ``Reactivated Stores`` -- ``"YES"`` once a store reopens; the value
+        persists across runs until the store is deactivated again (``"NO"``).
+        New stores and inactive stores are ``"NO"``.
+    """
+    from .brands import STATUS_COLUMNS
+    data_mod_col, deact_col, react_col = STATUS_COLUMNS
+    for col in STATUS_COLUMNS:
+        if col not in master_field_order:
+            master_field_order.append(col)
+
+    # Rows belonging to this run's brand: in-scope originals plus any new
+    # rows appended this run (tracked in row_run_status).
+    indices = set(result.in_scope_indices) | set(result.row_run_status.keys())
+    for i in indices:
+        if i < 0 or i >= len(result.updated_master):
+            continue
+        row = result.updated_master[i]
+        flags = result.row_run_status.get(i, {})
+        active = _is_active(row.get("Isactive"))
+
+        if flags.get("new"):
+            row[data_mod_col] = "New"
+        elif flags.get("changed"):
+            row[data_mod_col] = "Yes"
+        else:
+            row[data_mod_col] = "No"
+
+        row[deact_col] = "NO" if active else "YES"
+
+        if not active:
+            row[react_col] = "NO"
+        elif flags.get("reactivated"):
+            row[react_col] = "YES"
+        elif flags.get("new") or flags.get("deactivated"):
+            row[react_col] = "NO"
+        else:
+            cur = row.get(react_col)
+            row[react_col] = "YES" if (
+                cur is not None and str(cur).strip().upper() == "YES") else "NO"

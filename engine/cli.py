@@ -35,7 +35,7 @@ if __package__ in (None, ""):
     from engine.source_loader import load_source
     from engine.mapper import map_all, _coerce_int
     from engine.brand_overrides import get as get_overrides
-    from engine.reconciler import reconcile, _canonical, apply_inactivation_pass
+    from engine.reconciler import reconcile, _canonical, apply_inactivation_pass, apply_status_columns
     from engine.dates import parse_iso_date
     from engine.brands import load_brands
 else:
@@ -43,7 +43,7 @@ else:
     from .source_loader import load_source
     from .mapper import map_all, _coerce_int
     from .brand_overrides import get as get_overrides
-    from .reconciler import reconcile, _canonical, apply_inactivation_pass
+    from .reconciler import reconcile, _canonical, apply_inactivation_pass, apply_status_columns
     from .dates import parse_iso_date
     from .brands import load_brands
 
@@ -366,6 +366,11 @@ def main(argv=None) -> int:
         month_label=args.month,
     )
     warnings.extend(result.warnings)
+
+    # Engine-derived status columns (Data Modified / Deactivated / Reactivated).
+    apply_status_columns(result, master_field_order,
+                         scope_column=args.scope_column,
+                         scope_value=args.scope_value)
 
     brand_slug = args.brand_name.replace(" ", "_")
     updated_path, report_path = make_output_paths(
