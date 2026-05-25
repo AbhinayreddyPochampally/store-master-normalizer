@@ -1671,5 +1671,555 @@
       }
     ],
     "divergence_warnings": []
+  },
+  "House of Masaba": {
+    "label": "House of Masaba",
+    "scope_column": "brand",
+    "scope_value": "House of Masaba",
+    "default_sheet": "HOM",
+    "header_row": 1,
+    "sheet_overridable": true,
+    "mapping": [
+      {
+        "target": "ID",
+        "source_type": "ENGINE_PRESERVE",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Store Id",
+        "source_type": "COLUMN",
+        "source_value": "Site Code",
+        "transform": ""
+      },
+      {
+        "target": "Store Name",
+        "source_type": "COLUMN",
+        "source_value": "Site Name",
+        "transform": ""
+      },
+      {
+        "target": "Retek Code",
+        "source_type": "COLUMN",
+        "source_value": "Site Code",
+        "transform": ""
+      },
+      {
+        "target": "Legacy Code",
+        "source_type": "COLUMN",
+        "source_value": "Site Code",
+        "transform": ""
+      },
+      {
+        "target": "Organization",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic Business",
+        "transform": ""
+      },
+      {
+        "target": "MainOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "ABFRL",
+        "transform": ""
+      },
+      {
+        "target": "SubOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic",
+        "transform": ""
+      },
+      {
+        "target": "Facility Name",
+        "source_type": "CONSTANT",
+        "source_value": "House of Masaba",
+        "transform": ""
+      },
+      {
+        "target": "NewFacilityName",
+        "source_type": "CONSTANT",
+        "source_value": "House of Masaba",
+        "transform": ""
+      },
+      {
+        "target": "NewSubBrand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "brand",
+        "source_type": "CONSTANT",
+        "source_value": "House of Masaba",
+        "transform": ""
+      },
+      {
+        "target": "Sub-brand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Facility Type",
+        "source_type": "CONSTANT",
+        "source_value": "Retail",
+        "transform": ""
+      },
+      {
+        "target": "Brand2",
+        "source_type": "CONSTANT",
+        "source_value": "House of Masaba",
+        "transform": ""
+      },
+      {
+        "target": "Business",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic Business",
+        "transform": ""
+      },
+      {
+        "target": "Region",
+        "source_type": "COLUMN",
+        "source_value": "Zone",
+        "transform": "upper"
+      },
+      {
+        "target": "Store Type",
+        "source_type": "COLUMN",
+        "source_value": "COCO/COFO",
+        "transform": ""
+      },
+      {
+        "target": "Store Main type",
+        "source_type": "COLUMN",
+        "source_value": "COCO/COFO",
+        "transform": ""
+      },
+      {
+        "target": "Store Subtype",
+        "source_type": "COLUMN",
+        "source_value": "COCO/COFO",
+        "transform": ""
+      },
+      {
+        "target": "Store Zone",
+        "source_type": "DERIVED",
+        "source_value": "ZONE_FROM_REGION",
+        "transform": ""
+      },
+      {
+        "target": "Store City",
+        "source_type": "COLUMN",
+        "source_value": "City",
+        "transform": ""
+      },
+      {
+        "target": "State",
+        "source_type": "COLUMN",
+        "source_value": "State",
+        "transform": ""
+      },
+      {
+        "target": "Address",
+        "source_type": "COLUMN",
+        "source_value": "Store Address",
+        "transform": ""
+      },
+      {
+        "target": "Pincode",
+        "source_type": "COLUMN",
+        "source_value": "Pin Code",
+        "transform": ""
+      },
+      {
+        "target": "Location",
+        "source_type": "COLUMN",
+        "source_value": "Site Name",
+        "transform": ""
+      },
+      {
+        "target": "Located",
+        "source_type": "COLUMN",
+        "source_value": "TYPE",
+        "transform": ""
+      },
+      {
+        "target": "Square feet",
+        "source_type": "COLUMN",
+        "source_value": "Chargeable Area (SqFt)",
+        "transform": ""
+      },
+      {
+        "target": "Carpet",
+        "source_type": "COLUMN",
+        "source_value": "Chargeable Area (SqFt)",
+        "transform": ""
+      },
+      {
+        "target": "Store Opening Date",
+        "source_type": "COLUMN",
+        "source_value": "Store Opening date",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "SM's Name",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager No",
+        "source_type": "COLUMN",
+        "source_value": "SM's Contact No",
+        "transform": ""
+      },
+      {
+        "target": "Store Email Id",
+        "source_type": "COLUMN",
+        "source_value": "Email ID",
+        "transform": ""
+      },
+      {
+        "target": "Area Manager Name",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "ARM Contact No",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "ARM E mail",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "RM ",
+        "transform": ""
+      },
+      {
+        "target": "RM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "RM Contact No.",
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager E-mail Id",
+        "source_type": "COLUMN",
+        "source_value": "RM Email",
+        "transform": ""
+      },
+      {
+        "target": "Isactive",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Dailychecklist access",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Old Sapcode",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Remarks",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Title",
+        "source_type": "DERIVED",
+        "source_value": "TITLE_FROM_STORE_ID",
+        "transform": ""
+      }
+    ],
+    "divergence_warnings": []
+  },
+  "Jaypore": {
+    "label": "Jaypore",
+    "scope_column": "brand",
+    "scope_value": "Jaypore",
+    "default_sheet": "Re-Earth Store Master",
+    "header_row": 1,
+    "sheet_overridable": true,
+    "mapping": [
+      {
+        "target": "ID",
+        "source_type": "ENGINE_PRESERVE",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Store Id",
+        "source_type": "COLUMN",
+        "source_value": "Store Code",
+        "transform": ""
+      },
+      {
+        "target": "Store Name",
+        "source_type": "COLUMN",
+        "source_value": "Location\t",
+        "transform": ""
+      },
+      {
+        "target": "Retek Code",
+        "source_type": "COLUMN",
+        "source_value": "Store Code",
+        "transform": ""
+      },
+      {
+        "target": "Legacy Code",
+        "source_type": "COLUMN",
+        "source_value": "Store Code",
+        "transform": ""
+      },
+      {
+        "target": "Organization",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic Business",
+        "transform": ""
+      },
+      {
+        "target": "MainOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "ABFRL",
+        "transform": ""
+      },
+      {
+        "target": "SubOrganization",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic",
+        "transform": ""
+      },
+      {
+        "target": "Facility Name",
+        "source_type": "CONSTANT",
+        "source_value": "Jaypore",
+        "transform": ""
+      },
+      {
+        "target": "NewFacilityName",
+        "source_type": "CONSTANT",
+        "source_value": "Jaypore",
+        "transform": ""
+      },
+      {
+        "target": "NewSubBrand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "brand",
+        "source_type": "CONSTANT",
+        "source_value": "Jaypore",
+        "transform": ""
+      },
+      {
+        "target": "Sub-brand",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Facility Type",
+        "source_type": "CONSTANT",
+        "source_value": "Retail",
+        "transform": ""
+      },
+      {
+        "target": "Brand2",
+        "source_type": "CONSTANT",
+        "source_value": "Jaypore",
+        "transform": ""
+      },
+      {
+        "target": "Business",
+        "source_type": "CONSTANT",
+        "source_value": "Ethnic Business",
+        "transform": ""
+      },
+      {
+        "target": "Region",
+        "source_type": "COLUMN",
+        "source_value": "Region",
+        "transform": "upper"
+      },
+      {
+        "target": "Store Type",
+        "source_type": "COLUMN",
+        "source_value": "Store Type",
+        "transform": ""
+      },
+      {
+        "target": "Store Main type",
+        "source_type": "COLUMN",
+        "source_value": "Store Type",
+        "transform": ""
+      },
+      {
+        "target": "Store Subtype",
+        "source_type": "COLUMN",
+        "source_value": "Store Type",
+        "transform": ""
+      },
+      {
+        "target": "Store Zone",
+        "source_type": "DERIVED",
+        "source_value": "ZONE_FROM_REGION",
+        "transform": ""
+      },
+      {
+        "target": "Store City",
+        "source_type": "COLUMN",
+        "source_value": "City",
+        "transform": ""
+      },
+      {
+        "target": "State",
+        "source_type": "COLUMN",
+        "source_value": "State",
+        "transform": ""
+      },
+      {
+        "target": "Address",
+        "source_type": "COLUMN",
+        "source_value": "Address",
+        "transform": ""
+      },
+      {
+        "target": "Pincode",
+        "source_type": "COLUMN",
+        "source_value": "Pin code",
+        "transform": ""
+      },
+      {
+        "target": "Location",
+        "source_type": "COLUMN",
+        "source_value": "Location\t",
+        "transform": ""
+      },
+      {
+        "target": "Located",
+        "source_type": "COLUMN",
+        "source_value": "Located\t",
+        "transform": ""
+      },
+      {
+        "target": "Square feet",
+        "source_type": "COLUMN",
+        "source_value": "Carpet",
+        "transform": ""
+      },
+      {
+        "target": "Carpet",
+        "source_type": "COLUMN",
+        "source_value": "Carpet",
+        "transform": ""
+      },
+      {
+        "target": "Store Opening Date",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "SM Name",
+        "transform": ""
+      },
+      {
+        "target": "Showroom Manager No",
+        "source_type": "COLUMN",
+        "source_value": "SM Contact",
+        "transform": ""
+      },
+      {
+        "target": "Store Email Id",
+        "source_type": "COLUMN",
+        "source_value": "SM Email ",
+        "transform": ""
+      },
+      {
+        "target": "Area Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "ARM Name ",
+        "transform": ""
+      },
+      {
+        "target": "ARM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "ARM Contact",
+        "transform": ""
+      },
+      {
+        "target": "ARM E mail",
+        "source_type": "COLUMN",
+        "source_value": "ARM E mail",
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager Name",
+        "source_type": "COLUMN",
+        "source_value": "RM Name",
+        "transform": ""
+      },
+      {
+        "target": "RM Contact No",
+        "source_type": "COLUMN",
+        "source_value": "RM Contact No",
+        "transform": ""
+      },
+      {
+        "target": "Regional Manager E-mail Id",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Isactive",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Dailychecklist access",
+        "source_type": "CONSTANT",
+        "source_value": "Yes",
+        "transform": ""
+      },
+      {
+        "target": "Old Sapcode",
+        "source_type": "PRESERVE_FROM_MASTER",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Remarks",
+        "source_type": "EMPTY",
+        "source_value": null,
+        "transform": ""
+      },
+      {
+        "target": "Title",
+        "source_type": "DERIVED",
+        "source_value": "TITLE_FROM_STORE_ID",
+        "transform": ""
+      }
+    ],
+    "divergence_warnings": []
   }
 }
