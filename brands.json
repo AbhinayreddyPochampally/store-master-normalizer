@@ -569,7 +569,7 @@
     "scope_column": "brand",
     "scope_value": "Tasva",
     "default_sheet": "Contact Master",
-    "header_row": 2,
+    "header_row": 1,
     "sheet_overridable": true,
     "mapping": [
       {
