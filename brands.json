@@ -825,9 +825,10 @@
       },
       {
         "target": "Old Sapcode",
-        "source_type": "PRESERVE_FROM_MASTER",
-        "source_value": null,
-        "transform": ""
+        "source_type": "COLUMN",
+        "source_value": "Old Sapcode",
+        "transform": "",
+        "notes": "Source column at c29 carries the migration trail (e.g. '123456789, 11002' on a renamed/migrated row).  Cascade Step 2(b) tokenises this list and matches each value against in-scope Tasva Store Id / Legacy / Retek so a '11002 -> 67890' rename is classified as Migration (ID preserved, Title := new code, Old Sapcode appended) rather than falling through to NEW or ORPHAN.  Accumulating list; codes appended, never replaced."
       },
       {
         "target": "Remarks",

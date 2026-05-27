@@ -300,13 +300,28 @@ def _make_empty_master_row(field_order: List[str]) -> Dict[str, Any]:
 
 
 def _split_old_sapcode(v: Any) -> List[str]:
-    """Split a master row's Old Sapcode field on commas.  Returns
-    stripped, non-empty tokens."""
+    """Split an Old Sapcode value into individual comma-separated tokens.
+
+    Source workbooks routinely hand back a numeric Old Sapcode as a float
+    (e.g. xlsb's openness type coercion turns ``14040`` into ``14040.0``).
+    The pre-fix path used ``str(v).rstrip(".0")`` to chop the trailing
+    ``.0``, but that's a character-class strip — it removes *every*
+    trailing ``.`` or ``0`` — so ``"14040.0"`` becomes ``"1404"`` and
+    the migration cascade never finds the master row.  Convert integer
+    floats via ``str(int(v))`` instead so ``14040.0 -> "14040"``.
+    """
     if v is None:
         return []
-    if isinstance(v, (int, float)):
-        # A numeric Old Sapcode is a single token.
-        return [str(v).rstrip(".0") if isinstance(v, float) and v.is_integer() else str(v)]
+    if isinstance(v, bool):
+        return []
+    if isinstance(v, int):
+        return [str(v)]
+    if isinstance(v, float):
+        if v != v:                # NaN
+            return []
+        if v.is_integer():
+            return [str(int(v))]   # 14040.0 -> "14040"
+        return [str(v)]            # genuine fractional values stay as-is
     s = str(v).strip()
     if not s:
         return []
