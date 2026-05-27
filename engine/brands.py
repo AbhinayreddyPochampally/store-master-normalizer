@@ -173,7 +173,21 @@ def load_backend_config(path: Optional[Path] = None) -> Dict[str, Any]:
 
 def _load_raw(path: Optional[Path] = None) -> Dict[str, Any]:
     """Read brands.json off disk and return the parsed mapping verbatim
-    (no normalisation, no key filtering)."""
+    (no normalisation, no key filtering).
+
+    Self-heals one specific Windows corruption mode: trailing NUL bytes
+    appended after a valid JSON document (seen in the wild as 11k+ ``\\x00``
+    bytes after the closing ``}``).  json.load otherwise raises
+    JSONDecodeError("Extra data") and the engine silently behaves as if
+    there were no brands configured.  We strip the trailing NULs, retry,
+    and rewrite the cleaned file on disk so the corruption doesn't keep
+    biting on subsequent runs.
+
+    Returns ``{}`` only when the file is truly unrecoverable; the caller
+    cannot distinguish "no brands configured" from "file unreadable" via
+    the return value alone, so the silent-empty fallback is a last
+    resort.
+    """
     p = Path(path) if path is not None else get_brands_path()
     if not p.exists():
         try:
@@ -181,10 +195,32 @@ def _load_raw(path: Optional[Path] = None) -> Dict[str, Any]:
         except OSError:
             return {}
     try:
-        with p.open("r", encoding="utf-8") as f:
-            return json.load(f)
-    except (OSError, json.JSONDecodeError):
+        raw_bytes = p.read_bytes()
+    except OSError:
         return {}
+    # Fast path: well-formed JSON parses directly.
+    try:
+        return json.loads(raw_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        pass
+    # Recovery path: strip trailing NULs (and trailing whitespace) and
+    # try again.  If that works, rewrite the file so it stays clean.
+    trimmed = raw_bytes.rstrip(b"\x00").rstrip()
+    if trimmed and trimmed != raw_bytes:
+        try:
+            obj = json.loads(trimmed.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return {}
+        try:
+            # Rewrite without the trailing NULs.  Best-effort; an OSError
+            # here is non-fatal -- the in-memory dict is already good.
+            with p.open("w", encoding="utf-8", newline="\n") as f:
+                json.dump(obj, f, indent=2)
+                f.write("\n")
+        except OSError:
+            pass
+        return obj
+    return {}
 
 
 def save_brands(data: Dict[str, Dict[str, Any]],

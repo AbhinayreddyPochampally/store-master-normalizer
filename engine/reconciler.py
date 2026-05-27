@@ -493,8 +493,21 @@ def reconcile(*, rules, mapped_rows, master_rows, master_field_order,
 
     output_rows = [dict(r) for r in master_rows]
 
+    # Defensive: skip mapped rows that lack a usable Store Id.  In a normal
+    # brand source every data row has one (the cascade matches on it), but
+    # belt-and-braces against future quirky source layouts.  The source
+    # loader now stops at the first blank row (Fix A) so summary/footer
+    # blocks never reach this point, but if anything slips through with a
+    # blank Store Id we drop it and surface a warning rather than
+    # silently fabricating a new master row with no identifier.
+    _dropped_no_sid = 0
+
     for mapped in mapped_rows:
         sid = _match_key(mapped.get("Store Id"))
+
+        if sid is None:
+            _dropped_no_sid += 1
+            continue
 
         # -- Step 1 / Step 3: StoreId, Retek Code, Legacy Code --
         master_idx: Optional[int] = None
@@ -733,6 +746,12 @@ def reconcile(*, rules, mapped_rows, master_rows, master_field_order,
         ))
         output_rows.append(new_row)
         row_run_status[len(output_rows) - 1] = {"new": True, "changed": True}
+
+    if _dropped_no_sid:
+        warnings.append(
+            f"Dropped {_dropped_no_sid} source row(s) with no Store Id "
+            f"(likely footer/summary content under the data table)."
+        )
 
     return ReconcileResult(
         updated_master=output_rows,

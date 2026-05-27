@@ -22,3 +22,6 @@ _bashtest.txt
 # OS
 .DS_Store
 Thumbs.db
+
+.tmp_audit/
+

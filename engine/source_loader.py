@@ -70,15 +70,24 @@ def _load_xlsx(path: str, sheet_name: str, header_row: int) -> SourceSheet:
         header_values = None
         data_rows: List[Dict[int, Any]] = []
         # openpyxl iterates from row 1.  header_row is 1-indexed (matches CLI).
+        #
+        # End-of-table rule: once we hit the first fully-blank row after the
+        # header, STOP reading.  Brand source workbooks routinely ship a
+        # summary block under the data (e.g. Ownd's "Zone | No of Stores"
+        # counts table at rows 88-93, separated from the data by 3 empty
+        # rows).  Previously the loader skipped blanks and kept appending,
+        # so the summary's "No of Stores", "36", "9" values landed in the
+        # Store Id column and the cascade promoted them as fake new stores.
+        # Treating the first blank row as the end of the data table matches
+        # Excel's natural convention and protects every brand.
         for i, row in enumerate(ws.iter_rows(values_only=True), start=1):
             if i < header_row:
                 continue
             if i == header_row:
                 header_values = list(row)
                 continue
-            # Skip entirely blank rows (common at sheet tail).
             if _is_blank_row(row):
-                continue
+                break
             data_rows.append({j: row[j] if j < len(row) else None
                               for j in range(len(header_values))})
         if header_values is None:
@@ -97,6 +106,8 @@ def _load_xlsb(path: str, sheet_name: str, header_row: int) -> SourceSheet:
     data_rows: List[Dict[int, Any]] = []
     with open_xlsb(path) as wb:
         with wb.get_sheet(sheet_name) as sheet:
+            # End-of-table rule: stop at the first fully-blank row after the
+            # header (see _load_xlsx for the rationale).
             for i, row in enumerate(sheet.rows(), start=1):
                 vals = [c.v for c in row]
                 if i < header_row:
@@ -105,7 +116,7 @@ def _load_xlsb(path: str, sheet_name: str, header_row: int) -> SourceSheet:
                     header_values = vals
                     continue
                 if _is_blank_row(vals):
-                    continue
+                    break
                 # Pad / trim to header width.
                 width = len(header_values)
                 data_rows.append({j: vals[j] if j < len(vals) else None
