@@ -150,6 +150,30 @@ def zone_from_region(region: Any) -> Optional[str]:
     return s[:4]
 
 
+# Full-word region names keyed by 4-char zone code (the inverse of
+# _ZONE_PREFIX).  Region outputs the full word (SOUTH/NORTH/EAST/WEST);
+# Store Zone keeps the 4-char code.
+_REGION_FULL = {
+    "SOUT": "SOUTH",
+    "NRTH": "NORTH",
+    "EAST": "EAST",
+    "WEST": "WEST",
+}
+
+
+def region_full_name(region: Any) -> Optional[str]:
+    """Return the full uppercase region word (SOUTH/NORTH/EAST/WEST).
+
+    Derives the zone code first so any casing or trailing text ("south
+    zone") normalises, then maps the code back to its full word.  Unknown
+    codes fall back to the derived value unchanged.
+    """
+    code = zone_from_region(region)
+    if code is None:
+        return None
+    return _REGION_FULL.get(code, code)
+
+
 _PINCODE_RE = re.compile(r"(\d{6})(?!\d)")
 
 
@@ -340,16 +364,18 @@ def map_row(rules: List[Rule], row: Dict[int, Any], sheet: SourceSheet,
             out[tf] = val.upper()
 
     # -- v4 corrected rules (confirmed with Nivethitha) ------------------
-    # (d) Region and Store Zone are the SAME value: a 4-character, all-caps
-    #     code, one of SOUT / NRTH / WEST / EAST.  Derive the code from
-    #     whichever of the two the source provided and write it to both.
+    # (d) Region and Store Zone are DERIVED from the same source value but
+    #     formatted differently:
+    #       * Region     -- full uppercase word: SOUTH / NORTH / EAST / WEST.
+    #       * Store Zone -- 4-character code: SOUT / NRTH / EAST / WEST.
+    #     Derive from whichever of the two the source provided.
     region_src = out.get("Region")
     if region_src in (None, ""):
         region_src = out.get("Store Zone")
     zone_code = zone_from_region(region_src)
     if zone_code is not None:
         if "Region" in out:
-            out["Region"] = zone_code
+            out["Region"] = _REGION_FULL.get(zone_code, zone_code)
         if "Store Zone" in out:
             out["Store Zone"] = zone_code
 
