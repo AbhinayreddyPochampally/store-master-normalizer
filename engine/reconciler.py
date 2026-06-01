@@ -935,8 +935,7 @@ def apply_status_columns(result, master_field_order, scope_column=None,
     YES/NO flags, per-run for Data Modified):
 
       * ``Data Modified``      -- ``"New"`` for stores created this run,
-        ``"NO"`` for stores deactivated this run, ``"Yes"`` when any other
-        field changed this run, ``"No"`` otherwise.
+        ``"Yes"`` when any field changed this run, ``"No"`` otherwise.
       * ``Deactivated Stores`` -- ``"YES"`` while the row is currently
         inactive, ``"NO"`` while active.
       * ``Reactivated Stores`` -- ``"YES"`` once a store reopens; the value
@@ -961,8 +960,6 @@ def apply_status_columns(result, master_field_order, scope_column=None,
 
         if flags.get("new"):
             row[data_mod_col] = "New"
-        elif flags.get("deactivated"):
-            row[data_mod_col] = "NO"
         elif flags.get("changed"):
             row[data_mod_col] = "Yes"
         else:

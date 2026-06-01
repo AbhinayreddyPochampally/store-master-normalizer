@@ -1,6 +1,6 @@
 """Tests for the 3 engine-derived status columns (operator's request):
 
-    Data Modified       -- "New" / "NO" / "Yes" / "No" for this run.
+    Data Modified       -- "New" / "Yes" / "No" for this run.
     Deactivated Stores  -- standing: "YES" while inactive.
     Reactivated Stores  -- standing: "YES" after a reopen, persisted.
 """
@@ -83,7 +83,7 @@ class DeactivationTests(unittest.TestCase):
         row = res.updated_master[0]
         self.assertEqual(row[DEACT], "YES")
         self.assertEqual(row[REACT], "NO")
-        self.assertEqual(row[DATA_MOD], "NO")
+        self.assertEqual(row[DATA_MOD], "Yes")
 
 
 class StandingInactiveTests(unittest.TestCase):
