@@ -133,10 +133,13 @@ The project uses **semantic versioning**, `MAJOR.MINOR.PATCH`:
 
 ## Documentation
 
-Full handover documentation is in `docs/`:
+Full handover documentation is in `docs/`. The consolidated design reference is
+**`Design_Document_v1.0.docx`** (everything in one structured document); the
+focused per-topic docs are also included:
 
 | File | Contents |
 |------|----------|
+| `Design_Document_v1.0.docx` | Consolidated v1.0 design: architecture, rules, code, and operations (add/change/remove brands and columns) |
 | `01_Explanation_Document.docx` | What the tool does and why (plain language) |
 | `02_HLD_High_Level_Design.docx` | Components, responsibilities, data flow |
 | `03_LLD_Low_Level_Design.docx` | Module internals, rules, the reconciliation cascade |
