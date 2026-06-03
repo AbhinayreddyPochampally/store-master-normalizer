@@ -1,39 +1,33 @@
-# STATUS — v0.5.1 Pre-fix Audit (2026-05-19)
+# Project Status
 
-Engine version on disk: **1.0.0** (`engine/__init__.py`, the single source of truth).
+**Version:** 1.0.0 (see VERSION.md)
+**State:** Production — runnable locally and deployed on Railway.
+**Last updated:** 2026-06-03
 
-The user-supplied spec describes a Next.js + Electron app; the actual codebase is
-**Python + FastAPI** (entry `web/run.py`). The v0.5.1 fixes below are
-implemented in Python.
+## Summary
 
-## Phase 1 checklist — current state
+The Store Master Normalizer is complete and in use for eight brands:
+Pantaloons, PF (Planet Fashion), Tasva, TCNS, Shantanu and Nikhil, Ownd,
+House of Masaba, and Jaypore.
 
-| # | Check | Result | Evidence |
-|---|---|---|---|
-| 1 | Output has 44 columns with `ID` at pos 1 and `Title` at pos 44 | ❌ FAIL | `engine/brands.py:39-51` `MASTER_FIELDS` lists 42 columns. No `ID`, no `Title`. |
-| 2 | Every Tasva row has `Business = "Ethnic Business"` | ❌ FAIL | `brands.json:626-631` TASVA `Business` rule is `EMPTY` / `source_value: null`. The string "Ethnic Business" is wired to `Organization` instead. |
-| 3 | Every Tasva row has `Region` in ALL CAPS | ❌ FAIL | `brands.json:632-637` TASVA `Region` has `"transform": ""` (no `upper`). |
-| 4 | `Store Zone ∈ {SOUT, NRTH, WEST, EAST}` (4-letter, all caps) | ✅ PASS | `engine/mapper.py:122-127` `_ZONE_PREFIX = {"SOUTH":"SOUT","NORTH":"NRTH","EAST":"EAST","WEST":"WEST"}`. Already 4-letter caps. |
-| 5 | `Isactive == Dailychecklist access` on every row | ⚠️ PARTIAL | Paired in REACTIVATED (`reconciler.py:343-360`), NEW (`:462-465`), and inactivation passes (`:542-544, 586-588`). **Missing one-time sweep** to repair legacy rows like 12026 that already disagree. |
-| 6 | `Title = Store Id` on every row | ❌ FAIL | No `Title` target field, no `mirror` transform in `engine/mapper.py:182-209`. |
-| 7 | `ID` preserved from backend (no engine writes) | ❌ FAIL | `ID` not in `MASTER_FIELDS`, not in `brands.json`. Currently it'd be dropped on output. |
-| 8 | Store 12026 not in contradiction state `NO/YES` | ⚠️ DATA | Current fixture has 12026 = `YES/YES`, but missing from client active list (should become `NO/NO`). No engine sweep would fix it. |
-| 9 | New stores have `Business` populated | ❌ FAIL | Tied to check 2 above; constants block doesn't set `Business` for TASVA. |
-| 10 | Cascade Step 2 MIGRATED fires | ✅ implemented | `reconciler.py:379-409`, status `CODE_CHANGED`, uses `by_old_sapcode` lookup. Untested — added in F7. |
-| 11 | Cascade Step 3 REACTIVATED fires | ✅ implemented | `reconciler.py:327-372`, status `REACTIVATED`, flips both flags to YES. Untested — added in F7. |
+## What works
 
-## Transforms inventory (`engine/mapper.py:182-209`)
+- Per-brand mapping and the reconciliation cascade (Refresh / Migrated /
+  Reactivated / New) with the inactivation pass (closed / bad-email).
+- 44-column output schema plus the three engine-derived status columns
+  (Data Modified, Deactivated Stores, Reactivated Stores).
+- Region as the full uppercase word; Store Zone as the 4-character code.
+- Independent verifier (PASS / FAIL).
+- Web UI (FastAPI) and command-line entry point.
+- Regression test suite — 36 tests passing.
 
-Present: `upper`, `lower`, `title`, `strip`, `int`, `isoDate` (alias `iso_date`),
-`phoneClean` (alias `phone_clean`).
-Missing: `mirror`. Added in F5.
+## Run and deploy
 
-## Other findings
+- Local: `python -m web.run` (see README.md).
+- Hosted: Railway, built from the Dockerfile (see
+  docs/04_SLD_System_Level_Design.docx).
 
-- **No `tests/` directory.** Glob for `tests/**/*.py` and `**/test_*.py` returns nothing. All F1-F8 work needs new tests created from scratch.
+## Documentation
 
-## What's already good, skipped in Phase 3
-
-- F4 (Store Zone 4-letter mapping) — `_ZONE_PREFIX` already correct.
-- Cascade structure — Steps 1-4 + post-cascade inactivation pass all implemented.
-- Most transforms used by F1/F2/F3 already exist; only `mirror` needs adding.
+Handover documentation is under `docs/`. Version policy is in VERSION.md;
+change history is in CHANGELOG.md.
