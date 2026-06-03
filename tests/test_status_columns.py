@@ -83,7 +83,7 @@ class DeactivationTests(unittest.TestCase):
         row = res.updated_master[0]
         self.assertEqual(row[DEACT], "YES")
         self.assertEqual(row[REACT], "NO")
-        self.assertEqual(row[DATA_MOD], "Yes")
+        self.assertEqual(row[DATA_MOD], "No")  # deactivation is not a data mod
 
 
 class StandingInactiveTests(unittest.TestCase):
