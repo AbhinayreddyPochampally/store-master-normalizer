@@ -1,6 +1,6 @@
 # STATUS — v0.5.1 Pre-fix Audit (2026-05-19)
 
-Engine version on disk: **0.6.0** (`engine/__init__.py:3`).
+Engine version on disk: **1.0.0** (`engine/__init__.py`, the single source of truth).
 
 The user-supplied spec describes a Next.js + Electron app; the actual codebase is
 **Python + FastAPI** (entry `web/run.py`). The v0.5.1 fixes below are

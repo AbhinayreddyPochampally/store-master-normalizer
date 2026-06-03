@@ -14,6 +14,8 @@ import threading
 import time
 import webbrowser
 
+from engine import __version__
+
 
 def _open_browser(url: str, delay: float = 1.0) -> None:
     time.sleep(delay)
@@ -33,7 +35,7 @@ def main() -> int:
     url = f"http://{host}:{port}/"
 
     print("=" * 60)
-    print("Store Master Normalizer")
+    print(f"Store Master Normalizer  v{__version__}")
     print("=" * 60)
     print(f"Starting local server on {url}")
     print("Your browser should open automatically in a second.")
