@@ -25,3 +25,22 @@ Thumbs.db
 
 .tmp_audit/
 
+
+# Backups
+*.bak
+
+# Generated test / sanity outputs
+sanity_check_outputs/
+
+# Issue-log automation runtime state (local only)
+.issue_log_state.json
+
+# Stray pytest cache copies
+pytest-cache-files-*/
+
+# Local-only handover docs (not for GitHub)
+PRESENTATION.md
+AUTOMATION_PLAN.md
+
+# Issue-log data (local only, synced to Google Sheet)
+Store_Master_Issue_Log.xlsx
