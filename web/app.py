@@ -13,7 +13,6 @@ GET  /download/{filename} -- serves files from temp/
 """
 from __future__ import annotations
 
-import os
 import shutil
 import sys
 import traceback
@@ -56,33 +55,9 @@ from engine.brands import load_brands, load_backend_config  # noqa: E402
 import engine as _engine                                  # noqa: E402
 
 
-# Path resolution: works both in development (paths relative to this
-# file) and in PyInstaller --onefile builds (sys._MEIPASS holds the
-# unpacked bundle).
-import tempfile as _tempfile
-
-if getattr(sys, "frozen", False):
-    # PyInstaller --onefile -> bundle dir is sys._MEIPASS, e.g.
-    # C:\Users\<user>\AppData\Local\Temp\_MEI12345\.
-    _BUNDLE = Path(getattr(sys, "_MEIPASS", os.path.dirname(sys.executable)))
-    HERE = _BUNDLE / "web"
-    # _MEIPASS is wiped on exit, so temp/ MUST live elsewhere.  Prefer
-    # a folder next to the EXE so the operator can find downloaded
-    # outputs; fall back to the OS temp dir if the EXE folder is
-    # read-only (e.g. on a network share).
-    _EXE_DIR = Path(sys.executable).resolve().parent
-    _CANDIDATE = _EXE_DIR / "StoreMasterNormalizer-temp"
-    try:
-        _CANDIDATE.mkdir(parents=True, exist_ok=True)
-        _t = _CANDIDATE / ".write-test"
-        _t.touch()
-        _t.unlink()
-        TEMP_DIR = _CANDIDATE
-    except OSError:
-        TEMP_DIR = Path(_tempfile.gettempdir()) / "StoreMasterNormalizer-temp"
-else:
-    HERE = Path(__file__).resolve().parent
-    TEMP_DIR = _REPO_ROOT / "temp"
+# Path resolution relative to this file.
+HERE = Path(__file__).resolve().parent
+TEMP_DIR = _REPO_ROOT / "temp"
 
 TEMPLATES = Jinja2Templates(directory=str(HERE / "templates"))
 STATIC_DIR = HERE / "static"

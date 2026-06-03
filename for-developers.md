@@ -15,18 +15,12 @@ engine/                  Pure-Python engine, no UI dependency
   cli.py                 Command-line entry point
   verifier.py            Independent post-conversion verifier
 web/                            FastAPI front end
-  app.py                        Sys-frozen-aware paths; serves the UI
-  run.py                        Single-file entry: boots uvicorn,
+  app.py                        Serves the UI
+  run.py                        Entry point: boots uvicorn,
                                 opens browser to 127.0.0.1:8000
   brand_config.py               Re-exports engine.brands.BRANDS
   templates/                    Jinja2 partials
   static/style.css              Visual tokens, layout, components
-packaging/                      Windows build assets
-  StoreMasterNormalizer.spec    PyInstaller --onefile spec  <-- canonical
-  icon.ico
-  StoreMasterTool.spec / launcher.py / setup.iss / build.cmd
-                                Deprecated --onedir + Inno Setup
-                                pipeline; kept for reference only.
 analysis/findings.md     Original reference-sheet audit
 screenshots/             UI state captures
 inputs/                  Sample workbooks (gitignored in real use)
@@ -42,10 +36,9 @@ python -m pip install -r requirements.txt
 python -m web.run
 ```
 
-This is the same entry point the packaged EXE uses. It boots uvicorn
-on 127.0.0.1:8000 and opens your default browser. For headless
-dev (no browser), drop in `python -m uvicorn web.app:app --port 8000`
-instead.
+This boots uvicorn on 127.0.0.1:8000 and opens your default browser.
+For headless dev (no browser), drop in
+`python -m uvicorn web.app:app --port 8000` instead.
 
 Command-line conversion (no UI):
 
@@ -118,80 +111,6 @@ python -m engine.verifier \
 
 - **Isactive / Dailychecklist access**: forced to UPPER on the mapper's
   output, regardless of the reference's literal (`YES` / `NO`).
-
-## Build the Windows EXE (PyInstaller --onefile)
-
-The packaged build is a single ``StoreMasterNormalizer.exe`` — no
-installer, no admin prompt.  Build on a Windows host:
-
-```cmd
-:: From the repo root, in cmd.exe / PowerShell
-python -m pip install -r requirements.txt pyinstaller
-pyinstaller --clean --noconfirm packaging\StoreMasterNormalizer.spec
-```
-
-Output: ``dist\StoreMasterNormalizer.exe`` (~80–120 MB).
-
-If you'd rather not use the spec, the equivalent one-liner is:
-
-```cmd
-pyinstaller --onefile --console --name StoreMasterNormalizer ^
-  --icon packaging\icon.ico ^
-  --add-data "web\templates;web/templates" ^
-  --add-data "web\static;web/static" ^
-  --hidden-import openpyxl --hidden-import pyxlsb ^
-  --hidden-import et_xmlfile ^
-  --hidden-import python_multipart --hidden-import multipart ^
-  --hidden-import uvicorn.loops.auto ^
-  --hidden-import uvicorn.protocols.http.auto ^
-  --hidden-import uvicorn.protocols.http.h11_impl ^
-  --hidden-import uvicorn.protocols.websockets.auto ^
-  --hidden-import uvicorn.protocols.websockets.wsproto_impl ^
-  --hidden-import uvicorn.lifespan.on ^
-  --hidden-import anyio._backends._asyncio ^
-  web
-  web\run.py
-```
-
-Either approach produces the same single-file EXE.
-
-### Smoke test the EXE
-
-1. Copy ``dist\StoreMasterNormalizer.exe`` to a fresh location
-   (Desktop is fine).
-2. Double-click it.  A console window opens with
-   *"Starting Store Master Normalizer…"*; after ~5–15 seconds the
-   browser opens to ``http://127.0.0.1:8000/``.
-3. Drop ``inputs\Pantaloons_Apr_2026.xlsx`` and
-   ``inputs\Backend_Data_-_Store_Master.xlsx`` into the form, leave
-   the brand on Pantaloons, click **Convert**.
-4. Confirm **UPDATED: 137**, **NEW 0**, **CLOSED 0**, **WARNINGS 0**.
-5. Click **Verify output** → verdict **PASS**.
-6. Quit by closing the console window.
-
-### Common pitfalls
-
-- **pyxlsb / openpyxl `ModuleNotFoundError`**.  Both are dynamic
-  imports the static analyser misses on some PyInstaller versions.
-  The spec lists them as ``hiddenimports``; if you build via the
-  one-liner make sure ``--hidden-import openpyxl`` and
-  ``--hidden-import pyxlsb`` are present.
-- **Template / static path resolution.**  ``web/app.py`` checks
-  ``sys.frozen`` and uses ``sys._MEIPASS`` to find ``templates/`` and
-  ``static/`` inside the bundle.  If you copy the spec or rewrite the
-  entry script, preserve that branch — assuming the cwd works in
-  development but fails after packaging.
-- **First-run unpack (5–15 seconds).**  ``--onefile`` extracts the
-  bundle into ``%TEMP%\_MEIxxxx`` on each run.  This is expected;
-  subsequent runs feel faster because Windows caches the file.
-- **Windows Defender SmartScreen warning.**  Unsigned EXEs trigger a
-  one-time "Windows protected your PC" dialog.  Click *More info →
-  Run anyway*.  Code-signing the EXE removes this; out of scope for
-  now.
-- **Stale ``StoreMasterNormalizer-temp``.**  Outputs accumulate in
-  the folder next to the EXE; the app clears it on startup, but if
-  the user kills the process between writes the folder may grow.
-  Documented in README; users can delete it freely.
 
 ## Cross-filesystem note (sandbox dev only)
 

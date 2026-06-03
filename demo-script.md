@@ -2,12 +2,10 @@
 
 A 10-minute walkthrough that takes someone from "what is this thing" to
 "I've seen every feature, including the gnarly edge cases." Run it
-either from `StoreMasterNormalizer.exe` (the packaged build) or from the
-running uvicorn dev server — the UI is the same either way.
+from the running uvicorn server.
 
-Open the app first: double-click the EXE, or run
-`python -m web.run` from the repo root. Wait for the browser tab to
-land on `http://127.0.0.1:8000`.
+Open the app first: run `python -m web.run` from the repo root. Wait
+for the browser tab to land on `http://127.0.0.1:8000`.
 
 ---
 
@@ -344,12 +342,9 @@ Three claims to leave on:
    principles — catches it. PASS means the output truly matches the
    rules. FAIL gives you the cell-level detail to debug.
 
-End with the file delivery: it's a single
-`StoreMasterNormalizer.exe`, ~80–120 MB. Email it, drop it on
-OneDrive, USB stick — the operator double-clicks and the browser
-opens. First launch unpacks for 5–15 seconds (SmartScreen wants a
-*Run anyway* confirmation, one time only), subsequent launches feel
-instant.
+End with the delivery: the operator runs `python -m web.run` from the
+repo root and the browser opens to the local UI. Nothing leaves the
+machine.
 
 ---
 

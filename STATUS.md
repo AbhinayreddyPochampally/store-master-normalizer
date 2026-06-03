@@ -3,10 +3,8 @@
 Engine version on disk: **0.6.0** (`engine/__init__.py:3`).
 
 The user-supplied spec describes a Next.js + Electron app; the actual codebase is
-**Python + FastAPI + PyInstaller** (entry `web/run.py`, spec
-`packaging/StoreMasterNormalizer.spec`, EXE at `dist/StoreMasterNormalizer.exe`).
-The v0.5.1 fixes below are implemented in Python; the .exe is rebuilt via
-PyInstaller, not electron-builder.
+**Python + FastAPI** (entry `web/run.py`). The v0.5.1 fixes below are
+implemented in Python.
 
 ## Phase 1 checklist — current state
 
@@ -33,8 +31,6 @@ Missing: `mirror`. Added in F5.
 ## Other findings
 
 - **No `tests/` directory.** Glob for `tests/**/*.py` and `**/test_*.py` returns nothing. All F1-F8 work needs new tests created from scratch.
-- **PyInstaller spec** (`packaging/StoreMasterNormalizer.spec`) already lists every `engine.*` submodule under `HIDDEN`. New module `engine.tasva_check` will need to be added.
-- **Existing EXE** `dist/StoreMasterNormalizer.exe` — 17.7 MB, built 2026-05-14. Will be replaced by a fresh PyInstaller build (needs Windows host; build instructions in `BUILD.md` already cover this).
 
 ## What's already good, skipped in Phase 3
 

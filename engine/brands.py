@@ -30,8 +30,6 @@ from __future__ import annotations
 
 import json
 import os
-import sys
-import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -85,46 +83,14 @@ def _repo_root() -> Path:
 
 
 def get_brands_path() -> Path:
-    """Resolve where ``brands.json`` lives (next to EXE / repo root)."""
-    if getattr(sys, "frozen", False):
-        exe_dir = Path(sys.executable).resolve().parent
-        candidate = exe_dir / "brands.json"
-        try:
-            if candidate.exists():
-                return candidate
-            test = exe_dir / ".brands-write-test"
-            test.touch()
-            test.unlink()
-            return candidate
-        except OSError:
-            return Path(tempfile.gettempdir()) / "StoreMasterNormalizer-brands.json"
+    """Resolve where ``brands.json`` lives (repo root)."""
     return _repo_root() / "brands.json"
 
 
-def _bundled_seed_path() -> Optional[Path]:
-    """Return the bundled brands.json path when running under PyInstaller
-    onefile -- it lives at the root of ``sys._MEIPASS``.  Else None."""
-    if not getattr(sys, "frozen", False):
-        return None
-    meipass = getattr(sys, "_MEIPASS", None)
-    if not meipass:
-        return None
-    candidate = Path(meipass) / "brands.json"
-    return candidate if candidate.exists() else None
-
-
 def _seed_external_file(p: Path) -> None:
-    """Create ``p`` on first run from the bundled seed (if any)."""
+    """Create ``p`` on first run -- write an empty dict so the operator's
+    edits land somewhere reasonable."""
     p.parent.mkdir(parents=True, exist_ok=True)
-    seed = _bundled_seed_path()
-    if seed is not None:
-        try:
-            p.write_text(seed.read_text(encoding="utf-8"), encoding="utf-8")
-            return
-        except OSError:
-            pass
-    # No bundled seed and no external file -- write an empty dict so the
-    # operator's edits land somewhere reasonable.
     p.write_text("{}\n", encoding="utf-8")
 
 
