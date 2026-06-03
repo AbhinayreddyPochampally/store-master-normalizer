@@ -1,6 +1,6 @@
 # Project Status
 
-**Version:** 1.0.0 (see VERSION.md)
+**Version:** 1.0.0 (see the Versioning section of README.md)
 **State:** Production — runnable locally and deployed on Railway.
 **Last updated:** 2026-06-03
 
@@ -29,5 +29,5 @@ House of Masaba, and Jaypore.
 
 ## Documentation
 
-Handover documentation is under `docs/`. Version policy is in VERSION.md;
-change history is in CHANGELOG.md.
+Handover documentation is under `docs/`. Version policy is in the
+Versioning section of README.md; change history is in CHANGELOG.md.
