@@ -363,7 +363,7 @@ def map_row(rules: List[Rule], row: Dict[int, Any], sheet: SourceSheet,
         if isinstance(val, str):
             out[tf] = val.upper()
 
-    # -- v4 corrected rules (confirmed with Nivethitha) ------------------
+    # -- v4 corrected rules ----------------------------------------------
     # (d) Region and Store Zone are DERIVED from the same source value but
     #     formatted differently:
     #       * Region     -- full uppercase word: SOUTH / NORTH / EAST / WEST.

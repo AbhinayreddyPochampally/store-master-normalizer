@@ -743,7 +743,7 @@ def reconcile(*, rules, mapped_rows, master_rows, master_field_order,
         if _is_empty(new_row.get("Dailychecklist access")):
             new_row["Dailychecklist access"] = "YES"
         # v0.5.1 (F6): ID is SharePoint-assigned after upload. Always
-        # blank on NEW rows -- Nivethitha's team fills it in once SharePoint
+        # blank on NEW rows -- the operations team fills it in once SharePoint
         # provides the value.
         new_row["ID"] = None
         # v0.5.1 (F5): Title mirrors Store Id from day one.

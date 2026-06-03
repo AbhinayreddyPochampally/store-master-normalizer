@@ -2,8 +2,8 @@
 
 v0.4.1 B3: design doc Section 7 specifies the strings the engine writes
 to the Remarks column on each row classification.  Keeping them in one
-module makes them editable in one place (subject to Nivethitha's
-confirmation) and ensures every engine path uses the same wording.
+module makes them editable in one place and ensures every engine path
+uses the same wording.
 
 Placeholders:
     {monthLong}   "May 13, 2026"   - free-form, used by new / migrated / reactivated

@@ -168,7 +168,7 @@
         "source_type": "PRESERVE_FROM_MASTER",
         "source_value": null,
         "transform": "",
-        "notes": "v0.4.1 A4: Pantaloons source has no separate locality column; leave Location blank on refresh rather than duplicating Store Name. Pending Nivethitha confirmation (design doc Section 11.4)."
+        "notes": "Pantaloons source has no separate locality column; Location is left blank on refresh rather than duplicating Store Name."
       },
       {
         "target": "Located",
@@ -668,7 +668,7 @@
         "source_type": "CONSTANT",
         "source_value": "Ethnic Business",
         "transform": "",
-        "notes": "TASVA brand constant (v0.5.1 F2; confirmed by Abhinay)."
+        "notes": "TASVA brand constant."
       },
       {
         "target": "Region",
@@ -795,7 +795,7 @@
         "source_type": "COLUMN",
         "source_value": "RM",
         "transform": "",
-        "notes": "v0.4.1 B5: TASVA RM block. RM Name is col 7 (H). RM E-mail is col 8 (I) and RM Contact No is col 9 (J), swapped from the original reference per design doc Section 11.1. The adjacency-based duplicate-column resolver picks the nearest 'Email id' / 'Contact No' after the RM anchor automatically -- pending Nivethitha confirmation."
+        "notes": "TASVA RM block. RM Name is col 7 (H); RM E-mail is col 8 (I) and RM Contact No is col 9 (J), swapped from the original reference. The adjacency-based duplicate-column resolver picks the nearest 'Email id' / 'Contact No' after the RM anchor automatically."
       },
       {
         "target": "RM Contact No",

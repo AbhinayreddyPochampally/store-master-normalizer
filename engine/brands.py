@@ -37,7 +37,7 @@ from typing import Any, Dict, List, Optional
 MASTER_FIELDS: List[str] = [
     # v0.5.1: 44-column SharePoint-aligned schema.
     # Position 1: ID -- SharePoint list ID, engine-preserve on every path
-    # except NEW (blank for NEW; Nivethitha's team fills it after upload).
+    # except NEW (blank for NEW; the operations team fills it after upload).
     "ID",
     "Store Id", "Store Name", "Retek Code", "Legacy Code",
     "Organization", "MainOrganization", "SubOrganization",
