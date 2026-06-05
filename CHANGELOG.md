@@ -8,6 +8,14 @@ The pre-1.0 entries below consolidate the historical `v0.x.y` feature
 annotations that appear inline in the engine source; they mark when each piece
 of behaviour landed during development.
 
+## 1.0.2 — 2026-06-04
+
+- **Sheet picker: select from a list.** After a workbook is uploaded, the
+  sheet name field now offers the workbook's actual sheet names in a native
+  dropdown (`<datalist>` populated from `/validate-sheet`), so the operator
+  can pick a sheet instead of typing it. An empty sheet name still validates
+  (and fills the dropdown) rather than dead-ending.
+
 ## 1.0.1 — 2026-06-04
 
 - **Fix: sheet name picker unclickable in the web UI.** The invisible

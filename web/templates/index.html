@@ -796,6 +796,25 @@
           return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
         });
       }
+      // v1.0.2: native dropdown of the workbook's sheets.  Once a file is
+      // uploaded and /validate-sheet reports the available sheet names, we
+      // attach them to the input via a <datalist> so the operator can pick
+      // a sheet from a list instead of typing it.  (Clear the field, or
+      // press the down arrow, to see all sheets.)
+      function ensureDatalist(input, sheets) {
+        if (!sheets || !sheets.length) return;
+        var id = 'sheets__' + (input.dataset.slot || '').replace(/[^a-z0-9]+/gi, '-');
+        var dl = document.getElementById(id);
+        if (!dl) {
+          dl = document.createElement('datalist');
+          dl.id = id;
+          document.body.appendChild(dl);
+        }
+        dl.innerHTML = sheets.map(function(s) {
+          return '<option value="' + escapeHtml(s) + '"></option>';
+        }).join('');
+        input.setAttribute('list', id);
+      }
       function validate(input) {
         var slot = input.dataset.slot;
         var headerRow = parseInt(input.dataset.headerRow || '1', 10);
@@ -806,18 +825,23 @@
           return;
         }
         var sheetName = (input.value || '').trim();
-        if (!sheetName) {
-          setValidation(slot, 'error', 'Sheet name is required.', []);
-          return;
-        }
         var fd = new FormData();
         fd.append('file', fileInput.files[0]);
-        fd.append('sheet', sheetName);
+        // v1.0.2: an empty sheet name is no longer a dead end -- we still
+        // POST (the endpoint needs *a* value) so the response can populate
+        // the dropdown with the workbook's real sheet names.
+        fd.append('sheet', sheetName || '__list_sheets__');
         fd.append('header_row', String(headerRow));
         setValidation(slot, 'checking', 'Checking sheet…');
         fetch('/validate-sheet', { method: 'POST', body: fd })
           .then(function(r) { return r.json(); })
           .then(function(j) {
+            ensureDatalist(input, j.available_sheets);
+            if (!sheetName) {
+              setValidation(slot, 'error', 'Sheet name is required. Pick one of the sheets in the list.',
+                            j.available_sheets || []);
+              return;
+            }
             if (j.ok) {
               setValidation(slot, 'ok');
               // First-sheet-detected placeholder hint (does NOT replace
