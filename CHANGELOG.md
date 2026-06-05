@@ -8,6 +8,15 @@ The pre-1.0 entries below consolidate the historical `v0.x.y` feature
 annotations that appear inline in the engine source; they mark when each piece
 of behaviour landed during development.
 
+## 1.0.1 — 2026-06-04
+
+- **Fix: sheet name picker unclickable in the web UI.** The invisible
+  full-size `<input type="file">` overlay on each dropzone sat above the
+  sheet name field and the action buttons, so clicks meant for the picker
+  opened the file-browse dialog instead. The picker and action buttons are
+  now lifted above the overlay (`web/static/style.css`); the rest of the
+  dropzone keeps its click-to-upload behaviour.
+
 ## 1.0.0 — 2026-06-03
 
 Handover release. Standardised the version scheme and cleaned the project for

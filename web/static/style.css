@@ -319,6 +319,16 @@ input[type="text"]:focus, input[type="date"]:focus, select:focus {
   opacity: 0;
   cursor: pointer;
 }
+/* v1.0.1 fix: the invisible full-size file input above overlays every
+   static child of the dropzone, swallowing clicks meant for the sheet
+   name picker and the action buttons (the click opened the file dialog
+   instead of focusing the input).  Lift the interactive children above
+   the overlay; the rest of the dropzone keeps click-to-upload. */
+.dropzone .dz-sheet-field,
+.dropzone .dz-actions {
+  position: relative;
+  z-index: 2;
+}
 .dropzone .dz-icon {
   width: 34px; height: 34px;
   border-radius: 7px;
